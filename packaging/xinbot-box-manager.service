@@ -1,0 +1,25 @@
+[Unit]
+Description=XinBot Box Manager
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xinbot
+Group=xinbot
+WorkingDirectory=/opt/xinbot-box-manager
+ExecStart=/opt/xinbot-box-manager/xinbot-box-manager --bind 0.0.0.0:8080 --data-dir /var/lib/xinbot-box-manager --resource-dir /opt/xinbot-box-manager/resources
+Restart=on-failure
+RestartSec=5s
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/xinbot-box-manager
+
+# 在 2 GB 设备上完成实机测试后，可以考虑启用整个服务 cgroup 的保护上限。
+# MemoryMax=1700M
+
+[Install]
+WantedBy=multi-user.target

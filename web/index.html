@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>XinBot Box Manager</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <section id="auth-view" class="auth-shell hidden">
+      <div class="auth-card">
+        <button class="theme-toggle auth-theme-toggle ghost" data-theme-toggle type="button">浅色</button>
+        <div class="brand-mark">XB</div>
+        <p class="eyebrow">HEADLESS CONTROL CENTER</p>
+        <h1>XinBot Box</h1>
+        <p id="auth-description" class="muted">登录后管理这台设备上的 XinBot 实例。</p>
+        <form id="auth-form" class="stack">
+          <label>
+            管理员账号
+            <input id="auth-username" name="username" autocomplete="username" minlength="3" maxlength="64" required />
+          </label>
+          <label>
+            管理员密码
+            <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="10" maxlength="256" required />
+          </label>
+          <label id="auth-confirm-row" class="hidden">
+            确认密码
+            <input id="auth-confirm" name="confirmation" type="password" autocomplete="new-password" minlength="10" maxlength="256" />
+          </label>
+          <p id="auth-error" class="form-error"></p>
+          <button id="auth-submit" class="primary wide" type="submit">登录</button>
+        </form>
+        <p class="auth-note">账号数据仅保存在此设备上。</p>
+      </div>
+    </section>
+
+    <div id="app-view" class="app-shell hidden">
+      <header class="topbar">
+        <div class="brand-inline">
+          <span class="brand-mark small">XB</span>
+          <span><strong>XinBot Box</strong><small>Manager</small></span>
+        </div>
+        <div class="top-actions">
+          <span id="system-summary" class="system-summary">正在读取状态…</span>
+          <button class="ghost theme-toggle" data-theme-toggle type="button">浅色</button>
+          <button id="settings-button" class="ghost" type="button">系统设置</button>
+          <button id="account-button" class="ghost" type="button">账号</button>
+          <button id="logout-button" class="ghost danger-text" type="button">退出</button>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <div class="sidebar-heading">
+          <div>
+            <p class="eyebrow">INSTANCES</p>
+            <h2>机器人实例</h2>
+          </div>
+          <button id="new-instance-button" class="icon-button" type="button" aria-label="新建实例">＋</button>
+        </div>
+        <div id="instance-list" class="instance-list"></div>
+        <button id="plugin-manager-button" class="sidebar-nav-button" type="button">
+          <span class="sidebar-nav-icon">◇</span>
+          <span><strong>插件管理</strong><small id="plugin-manager-summary">正在读取插件库…</small></span>
+        </button>
+        <div class="sidebar-foot">
+          <span id="instance-count">0 个实例</span>
+          <span id="running-count">0 个运行中</span>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section id="plugin-manager-view" class="plugin-manager-view hidden">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">PLUGIN LIBRARY</p>
+              <h1>插件管理</h1>
+              <p class="muted">查看设备上的插件资源、依赖关系以及各实例的使用情况。</p>
+            </div>
+            <button id="plugin-settings-button" class="ghost" type="button">插件目录设置</button>
+          </div>
+
+          <div class="plugin-stats">
+            <div><strong id="plugin-total-count">0</strong><span>目录条目</span></div>
+            <div><strong id="plugin-ready-count">0</strong><span>资源已就绪</span></div>
+            <div><strong id="plugin-missing-count">0</strong><span>资源缺失</span></div>
+            <div><strong id="plugin-used-count">0</strong><span>已被实例使用</span></div>
+          </div>
+
+          <section class="panel plugin-library-panel">
+            <div class="plugin-library-toolbar">
+              <div>
+                <h2>本机插件库</h2>
+                <p id="plugin-resource-path" class="muted small-copy"></p>
+              </div>
+              <div class="plugin-filters">
+                <input id="plugin-search" type="search" placeholder="搜索名称或说明" />
+                <select id="plugin-type-filter" aria-label="插件类型">
+                  <option value="all">全部类型</option>
+                  <option value="META_PLUGIN">Meta 插件</option>
+                  <option value="PLUGIN">普通插件</option>
+                </select>
+              </div>
+            </div>
+            <p class="library-note">当前版本从插件资源目录读取目录清单和 JAR。导入、下载与升级仍通过 Linux 文件系统完成。</p>
+            <div id="plugin-library-list" class="plugin-library-list"></div>
+          </section>
+        </section>
+
+        <section id="empty-state" class="empty-state hidden">
+          <div class="empty-icon">＋</div>
+          <h2>创建第一个实例</h2>
+          <p>添加服务器地址、机器人账号和所需插件，然后从浏览器启动 XinBot。</p>
+          <button id="empty-new-button" class="primary" type="button">新建实例</button>
+        </section>
+
+        <div id="editor" class="editor hidden">
+          <section class="hero-panel">
+            <div>
+              <p class="eyebrow">SELECTED INSTANCE</p>
+              <h1 id="editor-title">新实例</h1>
+              <p id="editor-subtitle" class="muted">尚未保存</p>
+            </div>
+            <div class="runtime-card">
+              <span id="runtime-dot" class="status-dot"></span>
+              <div><strong id="runtime-state">已停止</strong><small id="runtime-detail">—</small></div>
+            </div>
+          </section>
+
+          <div class="workspace-grid">
+            <section class="panel config-panel">
+              <div class="section-title">
+                <div><p class="eyebrow">CONFIGURATION</p><h2>连接与运行</h2></div>
+                <span id="save-state" class="save-state"></span>
+              </div>
+              <form id="instance-form">
+                <div class="form-grid two">
+                  <label class="span-two">
+                    实例名称
+                    <input id="instance-name" maxlength="80" placeholder="例如：基地返回机器人" required />
+                  </label>
+                  <label>
+                    服务器地址
+                    <input id="instance-host" placeholder="2b2t.xin" required />
+                    <small id="instance-host-note" class="field-help">输入地址后自动选择对应的服务器适配。</small>
+                  </label>
+                  <label>
+                    端口（可选）
+                    <input id="instance-port" type="number" min="1" max="65535" placeholder="25565" />
+                  </label>
+                </div>
+
+                <div class="subsection">
+                  <div class="subsection-title"><h3>服务器适配</h3><span>根据服务器自动选择</span></div>
+                  <p class="section-help">已知服务器使用专用 Meta 处理登录和队列；其他服务器自动使用通用连接。</p>
+                  <div id="meta-plugins" class="server-adapter"></div>
+                  <p id="server-adapter-error" class="form-error"></p>
+                  <div id="meta-login-note" class="login-mode-note hidden"></div>
+                </div>
+
+                <div class="subsection">
+                  <div class="subsection-title"><h3>登录身份</h3><span>这个服务器使用的机器人账号</span></div>
+                  <div class="form-grid two">
+                    <label class="span-two">
+                      机器人用户名
+                      <input id="instance-username" maxlength="64" required />
+                    </label>
+                    <label class="span-two">
+                      二级登录密码（可选）
+                      <input id="instance-password" type="password" maxlength="512" autocomplete="off" placeholder="仅供服务器内 /login 等二次登录使用" />
+                      <small class="field-help">不是网页管理员密码，也不是 Microsoft 账号密码。</small>
+                    </label>
+                    <label id="login-template-row" class="span-two hidden">
+                      登录命令模板
+                      <input id="instance-login-template" placeholder="/login {password}" />
+                      <small class="field-help">DirectConnect 加入服务器后发送；<code>{password}</code> 会替换为上面的二级登录密码。</small>
+                    </label>
+                    <div id="managed-login-note" class="managed-login-note span-two hidden">
+                      <span class="note-check">✓</span>
+                      <span><strong id="managed-login-title"></strong><small>Box Manager 不会再发送重复的登录命令。</small></span>
+                    </div>
+                    <label class="span-two toggle-row">
+                      <span><strong>Microsoft 正版模式</strong><small>由 XinBot Core 使用保存的在线会话；启用时不发送二级登录命令</small></span>
+                      <input id="instance-online" type="checkbox" />
+                    </label>
+                  </div>
+                </div>
+
+                <div class="subsection">
+                  <div class="subsection-title"><h3>运行参数</h3><span>单实例 JVM 内存限制</span></div>
+                  <div class="form-grid two">
+                    <label>
+                      JVM 初始堆（MB）
+                      <input id="instance-xms" type="number" min="16" max="1024" value="32" required />
+                    </label>
+                    <label>
+                      JVM 最大堆（MB）
+                      <input id="instance-xmx" type="number" min="64" max="1024" value="256" required />
+                    </label>
+                  </div>
+                </div>
+                <div class="subsection">
+                  <div class="subsection-title"><h3>普通插件</h3><span>依赖会自动加入</span></div>
+                  <div id="regular-plugins" class="plugin-grid"></div>
+                  <div id="plugin-config-actions" class="plugin-config-actions"></div>
+                </div>
+
+                <p id="instance-error" class="form-error"></p>
+                <div class="form-actions">
+                  <button id="delete-button" class="ghost danger-text" type="button">移到回收目录</button>
+                  <span class="spacer"></span>
+                  <button id="save-button" class="primary" type="submit">保存实例</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel operations-panel">
+              <div class="section-title compact">
+                <div><p class="eyebrow">OPERATIONS</p><h2>运行控制</h2></div>
+              </div>
+              <div class="operation-buttons">
+                <button id="start-button" class="primary" type="button">启动</button>
+                <button id="restart-button" class="ghost" type="button">重启</button>
+                <button id="stop-button" class="danger" type="button">停止</button>
+              </div>
+              <dl class="metrics">
+                <div><dt>PID</dt><dd id="metric-pid">—</dd></div>
+                <div><dt>内存</dt><dd id="metric-memory">—</dd></div>
+                <div><dt>CPU</dt><dd id="metric-cpu">—</dd></div>
+                <div><dt>启动时间</dt><dd id="metric-started">—</dd></div>
+              </dl>
+
+              <div class="console-heading">
+                <div><p class="eyebrow">LIVE OUTPUT</p><h3>控制台</h3></div>
+                <button id="clear-console-button" class="text-button" type="button">清空显示</button>
+              </div>
+              <div id="console" class="console" role="log" aria-live="polite"></div>
+              <form id="command-form" class="command-row">
+                <span>›</span>
+                <input id="command-input" autocomplete="off" placeholder="输入 XinBot 控制台命令" />
+                <button class="ghost" type="submit">发送</button>
+              </form>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <dialog id="settings-dialog">
+      <form id="settings-form" class="dialog-card">
+        <div class="dialog-heading"><div><p class="eyebrow">SYSTEM</p><h2>运行环境</h2></div><button class="dialog-close icon-button" type="button">×</button></div>
+        <p class="muted">路径保存在本机。第一版暂不自动下载 Java 或 XinBot Core。</p>
+        <label>Java 命令或绝对路径<input id="setting-java" required placeholder="java 或 /usr/bin/java" /></label>
+        <label>XinBot Core JAR<input id="setting-jar" placeholder="/opt/xinbot/xinbot.jar" /></label>
+        <label>插件资源目录<input id="setting-resources" required placeholder="/opt/xinbot-box/resources" /></label>
+        <div id="settings-health" class="health-list"></div>
+        <p id="settings-error" class="form-error"></p>
+        <div class="form-actions"><span class="spacer"></span><button class="primary" type="submit">保存设置</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="account-dialog">
+      <form id="account-form" class="dialog-card">
+        <div class="dialog-heading"><div><p class="eyebrow">SECURITY</p><h2>修改管理员账号</h2></div><button class="dialog-close icon-button" type="button">×</button></div>
+        <label>管理员账号<input id="account-username" minlength="3" maxlength="64" required /></label>
+        <label>当前密码<input id="account-current-password" type="password" autocomplete="current-password" required /></label>
+        <label>新密码<input id="account-new-password" type="password" minlength="10" maxlength="256" autocomplete="new-password" required /></label>
+        <label>确认新密码<input id="account-confirm-password" type="password" minlength="10" maxlength="256" autocomplete="new-password" required /></label>
+        <p class="muted small-copy">修改成功后，其他已有登录会话将立即失效。</p>
+        <p id="account-error" class="form-error"></p>
+        <div class="form-actions"><span class="spacer"></span><button class="primary" type="submit">更新账号</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="plugin-config-dialog">
+      <form id="plugin-config-form" class="dialog-card wide-dialog">
+        <div class="dialog-heading"><div><p class="eyebrow">PLUGIN CONFIG</p><h2 id="plugin-config-title">插件配置</h2></div><button class="dialog-close icon-button" type="button">×</button></div>
+        <p id="plugin-config-description" class="muted small-copy"></p>
+        <div id="plugin-config-modes" class="config-mode-tabs hidden" role="tablist" aria-label="配置编辑模式">
+          <button id="plugin-config-structured-button" type="button" role="tab">结构化编辑</button>
+          <button id="plugin-config-raw-button" type="button" role="tab">原始 JSON</button>
+        </div>
+        <div id="bttb-editor" class="bttb-editor hidden"></div>
+        <textarea id="plugin-config-content" class="config-editor" spellcheck="false"></textarea>
+        <p id="plugin-config-error" class="form-error"></p>
+        <div class="form-actions"><span class="spacer"></span><button class="primary" type="submit">保存配置</button></div>
+      </form>
+    </dialog>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
