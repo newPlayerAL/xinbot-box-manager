@@ -6,7 +6,7 @@ XinBot 实例，适合 BTTB、消息响应等常驻场景。
 > 项目目前处于 `0.1.x` 原型阶段，功能和接口仍可能调整。请勿把未启用 HTTPS 的管理端
 > 直接暴露到公网。
 
-![实例配置页：已知服务器自动选择专用 Meta](docs/images/instance-auto-adapter.png)
+![实例配置页：已知服务器自动选择专用 Meta](assets/instance-auto-adapter.png)
 
 ## 主要功能
 
@@ -40,17 +40,6 @@ http://设备IP:8080
 
 首次打开会要求创建管理员账号。软件包会自动安装 Java 运行时、启用 systemd 服务，并准备
 XinBot Core 和内置插件。
-
-构建环境要求、离线构建、ARM64 交叉编译、服务配置和密码恢复见
-[安装与运维文档](docs/installation.md)。
-
-## 文档
-
-- [安装与运维](docs/installation.md)
-- [源码构建与开发](docs/development.md)
-- [当前实现与验证状态](docs/implementation-status.md)
-- [参与贡献](CONTRIBUTING.md)
-- [安全策略](SECURITY.md)
 
 ## 许可证
 
