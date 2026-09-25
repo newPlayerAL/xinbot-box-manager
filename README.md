@@ -22,7 +22,13 @@ XinBot 实例，适合 BTTB、消息响应等常驻场景。
 
 ## 快速安装
 
-项目支持 Debian/Ubuntu 的 `amd64` 和 `arm64` 软件包。拿到 `.deb` 后只需执行：
+从 [GitHub Releases](https://github.com/newPlayerAL/xinbot-box-manager/releases/latest)
+下载与设备架构对应的软件包：
+
+- [AMD64 / x86-64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_amd64.deb)
+- [ARM64 / AArch64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_arm64.deb)
+
+下载后执行：
 
 ```shell
 sudo apt install ./xinbot-box-manager_0.1.0_amd64.deb
@@ -36,15 +42,6 @@ http://设备IP:8080
 
 首次打开会要求创建管理员账号。软件包会自动安装 Java 运行时、启用 systemd 服务，并准备
 XinBot Core 和内置插件。
-
-当前 GitHub 仓库尚未发布公开 Release；需要从源码生成 `.deb` 时执行：
-
-```shell
-git clone https://github.com/newPlayerAL/xinbot-box-manager.git
-cd xinbot-box-manager
-./scripts/build-deb.sh
-sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).deb
-```
 
 构建环境要求、离线构建、ARM64 交叉编译、服务配置和密码恢复见
 [安装与运维文档](docs/installation.md)。

@@ -4,8 +4,8 @@
 
 ## 发布状态
 
-截至目前，GitHub 仓库还没有公开 Release。仓库可以构建完整的 Debian 软件包；未来正式
-发布后，普通用户只需下载与设备架构匹配的 `.deb` 并通过 APT 安装。
+公开版本发布在 [GitHub Releases](https://github.com/newPlayerAL/xinbot-box-manager/releases)。
+下载与设备架构匹配的 `.deb` 后通过 APT 安装即可。
 
 ## 安装 `.deb`
 
