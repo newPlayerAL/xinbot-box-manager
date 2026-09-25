@@ -5,6 +5,13 @@
 项目仍处于 `0.1.x` 原型阶段，目前只维护 `main` 分支的最新代码，不承诺为旧提交提供
 安全补丁或长期支持。
 
+## 已实现的认证保护
+
+- 管理员密码使用带随机盐的 PBKDF2-SHA256 哈希保存，不保存明文；
+- 会话 Cookie 使用 HttpOnly 和 SameSite 属性；
+- 登录失败具有基础限速；
+- Linux 控制台密码重置不会把密码放入命令行参数或日志，并会使已有会话失效。
+
 ## 报告安全问题
 
 如果 GitHub 仓库已启用 Private vulnerability reporting，请通过仓库的 **Security** 页面
