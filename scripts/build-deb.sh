@@ -118,6 +118,7 @@ while IFS=$'\t' read -r file _; do
         "$staging_dir/usr/share/xinbot-box-manager/resources/$file"
 done <packaging/bundle-resources.tsv
 install -Dm0644 README.md "$staging_dir/usr/share/doc/xinbot-box-manager/README.md"
+install -Dm0644 README.en.md "$staging_dir/usr/share/doc/xinbot-box-manager/README.en.md"
 install -Dm0644 LICENSE "$staging_dir/usr/share/doc/xinbot-box-manager/copyright"
 install -Dm0644 \
     packaging/bundle-resources.tsv \
@@ -125,6 +126,9 @@ install -Dm0644 \
 install -Dm0644 \
     packaging/BUNDLED-COMPONENTS.md \
     "$staging_dir/usr/share/doc/xinbot-box-manager/BUNDLED-COMPONENTS.md"
+install -Dm0644 \
+    packaging/BUNDLED-COMPONENTS.zh-CN.md \
+    "$staging_dir/usr/share/doc/xinbot-box-manager/BUNDLED-COMPONENTS.zh-CN.md"
 install -Dm0755 packaging/deb/postinst "$staging_dir/DEBIAN/postinst"
 install -Dm0755 packaging/deb/prerm "$staging_dir/DEBIAN/prerm"
 install -Dm0755 packaging/deb/postrm "$staging_dir/DEBIAN/postrm"

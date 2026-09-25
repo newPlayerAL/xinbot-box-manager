@@ -1,5 +1,7 @@
 # Bundled components
 
+[简体中文](BUNDLED-COMPONENTS.zh-CN.md)
+
 The complete Debian package contains unmodified official release binaries from the following
 projects. Each component is licensed under GPL-3.0-or-later by its respective authors and
 contributors.

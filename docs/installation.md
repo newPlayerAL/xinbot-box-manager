@@ -1,5 +1,7 @@
 # 安装与运维
 
+[English](installation.en.md)
+
 本文记录 XinBot Box Manager 的软件包构建、安装和日常维护方法。
 
 ## 发布状态

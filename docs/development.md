@@ -1,5 +1,7 @@
 # 源码构建与开发
 
+[English](development.en.md)
+
 ## 本地构建
 
 项目需要 Rust stable，依赖版本锁定在 `Cargo.lock`：

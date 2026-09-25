@@ -1,10 +1,13 @@
 # XinBot Box Manager
 
+[English](README.en.md)
+
 面向无头 Linux 主机的轻量 XinBot 网页管理端。通过一个浏览器入口管理多个相互隔离的
 XinBot 实例，适合 BTTB、消息响应等常驻场景。
 
-> 项目目前处于 `0.1.x` 原型阶段，功能和接口仍可能调整。请勿把未启用 HTTPS 的管理端
-> 直接暴露到公网。
+当前版本：`0.1.0`
+
+请勿把未启用 HTTPS 的管理端直接暴露到公网。
 
 ![实例配置页：已知服务器自动选择专用 Meta](assets/instance-auto-adapter.png)
 
