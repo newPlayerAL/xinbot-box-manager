@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload
+fi
+
+# /var/lib/xinbot-box-manager deliberately remains after removal or purge so
+# uninstalling the package cannot silently destroy bot profiles or passwords.
+exit 0

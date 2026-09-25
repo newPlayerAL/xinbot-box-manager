@@ -40,6 +40,46 @@
 `scripts/prepare-resources.sh` 只用于从本机已有的开发资源目录复制文件，不会联网下载，
 也不会把这些二进制文件加入 Git；`target/`、`data/`、日志和常见编辑器文件均已忽略。
 
+## Debian / Ubuntu 一键安装
+
+当前可以在目标设备上构建 `.deb`，然后通过一条 APT 命令完成安装。安装包会创建低权限的
+`xinbot` 系统用户、数据与资源目录，安装并启动 systemd 服务：
+
+```shell
+./scripts/build-deb.sh
+sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).deb
+```
+
+安装后访问 `http://设备IP:8080` 创建管理员账号。服务默认配置位于：
+
+```text
+/etc/default/xinbot-box-manager
+```
+
+修改监听地址或目录后执行：
+
+```shell
+sudo systemctl restart xinbot-box-manager
+```
+
+程序数据和插件资源位于 `/var/lib/xinbot-box-manager`。卸载软件包不会删除这个目录，避免意外
+丢失实例、密码和配置。当前仓库暂不提供 GitHub Release，因而仍需先在目标设备上构建安装包；
+待项目功能和兼容性稳定后，可将相同构建流程接入 Release。
+
+安装包不包含 XinBot Core 和插件 JAR。可以将已取得的 JAR 放入
+`/var/lib/xinbot-box-manager/resources`，并保持 `xinbot:xinbot` 所有权，然后在网页“系统设置”
+中选择对应路径。Java 21 作为推荐依赖由 APT 尝试安装；如果当前发行版的软件源不提供它，
+需要先通过发行版或可信的 JDK 软件源安装 Java 21。
+
+构建脚本支持 Rust 交叉编译目标，例如：
+
+```shell
+./scripts/build-deb.sh --target aarch64-unknown-linux-gnu
+```
+
+这会生成 `arm64` 软件包，但交叉编译器和对应 Rust target 需要事先安装。对于 H618、RK3518
+等 ARM64 设备，现阶段更简单可靠的方式仍是在相同架构的 Linux 设备上原生构建。
+
 ## 构建
 
 需要 Rust 工具链。项目依赖已锁定在 `Cargo.lock` 中：

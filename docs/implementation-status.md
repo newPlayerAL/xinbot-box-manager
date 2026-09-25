@@ -44,7 +44,8 @@
 - 最多保留 1000 行的当前进程内日志；
 - SSE 实时日志和状态；
 - Linux PID、RSS 和 CPU 采样；
-- systemd unit 模板和开发资源准备脚本。
+- 可直接安装的 Debian 软件包构建流程，包括专用系统用户、数据目录、默认配置和 systemd 服务；
+- 开发资源准备脚本。
 
 ## 验证结果
 
@@ -54,6 +55,7 @@
 - `cargo clippy --offline --all-targets -- -D warnings`：通过；
 - `node --check web/app.js`：通过；
 - release 构建：通过；
+- AMD64 `.deb` 构建、控制信息和包内容检查：通过；
 - 管理员首次设置、登录、设置保存、实例 CRUD 和回收目录：通过；
 - BTTB 配置读取、无效 JSON 拒绝和有效 JSON 保存：通过；
 - 实际启动 XinBot Core + DirectConnect + BackToTheBase + MovementSync：通过；
@@ -95,7 +97,7 @@ XinBot 的连接目标同样是本机不可用端口 `127.0.0.1:9`：这验证�
 - 插件导入、下载与升级；
 - HTTPS 终止、首次设置引导令牌和更完整的安全审计；
 - 实例导入、导出、备份和恢复界面；
-- 正式安装器、升级与回滚流程；
+- 软件包升级迁移、版本回滚以及多发行版安装验证；
 - 针对手机和不同浏览器的完整视觉/交互验收。
 
 XinManager、XinRemote、世界/区块/3D 查看、多用户和角色权限仍不在当前原型范围内。

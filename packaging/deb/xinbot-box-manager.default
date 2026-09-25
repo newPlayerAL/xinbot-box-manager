@@ -1,0 +1,9 @@
+# XinBot Box Manager service settings.
+# After changing this file, run: systemctl restart xinbot-box-manager
+
+# The default is intended for a trusted local network. Do not expose the plain
+# HTTP port directly to the Internet.
+XINBOT_BOX_BIND=0.0.0.0:8080
+XINBOT_BOX_DATA_DIR=/var/lib/xinbot-box-manager
+XINBOT_BOX_RESOURCE_DIR=/var/lib/xinbot-box-manager/resources
+XINBOT_BOX_SECURE_COOKIE=false
