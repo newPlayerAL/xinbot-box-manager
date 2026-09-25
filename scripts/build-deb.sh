@@ -75,10 +75,10 @@ if [[ -n $target ]]; then
     cargo build --release --locked --target "$target"
     binary="target/$target/release/xinbot-box-manager"
     case "$target" in
-        aarch64-*-linux-*) architecture=arm64 ;;
-        x86_64-*-linux-*) architecture=amd64 ;;
-        armv7*-linux-*) architecture=armhf ;;
-        i686-*-linux-*) architecture=i386 ;;
+        aarch64-*-linux-*) debian_architecture=arm64 ;;
+        x86_64-*-linux-*) debian_architecture=amd64 ;;
+        armv7*-linux-*) debian_architecture=armhf ;;
+        i686-*-linux-*) debian_architecture=i386 ;;
         *)
             echo "unsupported Debian architecture for Rust target: $target" >&2
             exit 1
@@ -87,8 +87,14 @@ if [[ -n $target ]]; then
 else
     cargo build --release --locked
     binary="target/release/xinbot-box-manager"
-    architecture=$(dpkg --print-architecture)
+    debian_architecture=$(dpkg --print-architecture)
 fi
+
+case "$debian_architecture" in
+    amd64) artifact_architecture=x86_64 ;;
+    arm64) artifact_architecture=arm64 ;;
+    *) artifact_architecture=$debian_architecture ;;
+esac
 
 if [[ ! -x $binary ]]; then
     echo "compiled binary not found: $binary" >&2
@@ -96,7 +102,7 @@ if [[ ! -x $binary ]]; then
 fi
 
 mkdir -p dist
-staging_dir=$(mktemp -d "target/deb-staging.${architecture}.XXXXXX")
+staging_dir=$(mktemp -d "target/deb-staging.${artifact_architecture}.XXXXXX")
 chmod 0755 "$staging_dir"
 
 install -Dm0755 "$binary" "$staging_dir/usr/bin/xinbot-box-manager"
@@ -135,10 +141,10 @@ install -Dm0755 packaging/deb/postrm "$staging_dir/DEBIAN/postrm"
 install -Dm0644 packaging/deb/conffiles "$staging_dir/DEBIAN/conffiles"
 sed \
     -e "s/@VERSION@/$version/g" \
-    -e "s/@ARCHITECTURE@/$architecture/g" \
+    -e "s/@ARCHITECTURE@/$debian_architecture/g" \
     packaging/deb/control.in >"$staging_dir/DEBIAN/control"
 
-package_path="dist/xinbot-box-manager_${version}_${architecture}.deb"
+package_path="dist/xinbot-box-manager_${version}_${artifact_architecture}.deb"
 dpkg-deb --root-owner-group --build "$staging_dir" "$package_path"
 echo "created $package_path"
 echo "staging directory retained at $staging_dir (cargo clean removes build staging data)"

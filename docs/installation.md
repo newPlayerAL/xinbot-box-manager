@@ -11,13 +11,13 @@
 
 ## 安装 `.deb`
 
-AMD64 设备：
+x86_64 设备：
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_amd64.deb
+sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
 ```
 
-ARM64 设备：
+arm64 设备：
 
 ```shell
 sudo apt install ./xinbot-box-manager_0.1.0_arm64.deb
@@ -42,8 +42,10 @@ sudo apt install ./xinbot-box-manager_0.1.0_arm64.deb
 git clone https://github.com/newPlayerAL/xinbot-box-manager.git
 cd xinbot-box-manager
 ./scripts/build-deb.sh
-sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).deb
+sudo apt install ./dist/xinbot-box-manager_0.1.0_x86_64.deb
 ```
+
+在 arm64 构建机上，将最后一条命令中的 `x86_64` 改为 `arm64`。
 
 所有外部 JAR 都会按照 `packaging/bundle-resources.tsv` 校验 SHA-256。仓库本身不提交这些
 二进制文件。
@@ -56,7 +58,7 @@ sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).de
 ./scripts/build-deb.sh --resources /path/to/verified-resources
 ```
 
-### ARM64 交叉编译
+### arm64 交叉编译
 
 安装对应 Rust target 和交叉编译器后，可以执行：
 
@@ -64,7 +66,7 @@ sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).de
 ./scripts/build-deb.sh --target aarch64-unknown-linux-gnu
 ```
 
-这会生成 `arm64` 软件包。也可以直接在 ARM64 Linux 环境中原生构建。
+这会生成 `arm64` 软件包。也可以直接在 arm64 Linux 环境中原生构建。
 
 ## 服务和目录
 

@@ -13,13 +13,13 @@ matching your device architecture and install it with APT.
 
 ## Installing the `.deb`
 
-On AMD64 devices:
+On x86_64 devices:
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_amd64.deb
+sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
 ```
 
-On ARM64 devices:
+On arm64 devices:
 
 ```shell
 sudo apt install ./xinbot-box-manager_0.1.0_arm64.deb
@@ -45,8 +45,10 @@ internet connection is also required to download the pinned XinBot Core and plug
 git clone https://github.com/newPlayerAL/xinbot-box-manager.git
 cd xinbot-box-manager
 ./scripts/build-deb.sh
-sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).deb
+sudo apt install ./dist/xinbot-box-manager_0.1.0_x86_64.deb
 ```
+
+On an arm64 build host, replace `x86_64` in the final command with `arm64`.
 
 Every external JAR is verified against the SHA-256 value in
 `packaging/bundle-resources.tsv`. These binaries are not committed to the repository.
@@ -60,7 +62,7 @@ local directory:
 ./scripts/build-deb.sh --resources /path/to/verified-resources
 ```
 
-### ARM64 cross-compilation
+### arm64 cross-compilation
 
 After installing the appropriate Rust target and cross-compiler, run:
 
@@ -68,7 +70,7 @@ After installing the appropriate Rust target and cross-compiler, run:
 ./scripts/build-deb.sh --target aarch64-unknown-linux-gnu
 ```
 
-This produces an `arm64` package. You can also build natively on an ARM64 Linux system.
+This produces an `arm64` package. You can also build natively on an arm64 Linux system.
 
 ## Service and directories
 

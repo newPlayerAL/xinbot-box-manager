@@ -26,16 +26,16 @@ XinBot 实例，适合 BTTB、消息响应等常驻场景。
 从 [GitHub Releases](https://github.com/newPlayerAL/xinbot-box-manager/releases/latest)
 下载与设备架构对应的软件包：
 
-- [AMD64 / x86-64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_amd64.deb)
-- [ARM64 / AArch64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_arm64.deb)
+- [x86_64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_x86_64.deb)
+- [arm64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_arm64.deb)
 
 下载后执行：
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_amd64.deb
+sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
 ```
 
-ARM64 设备将文件名中的 `amd64` 改为 `arm64`。安装完成后访问：
+arm64 设备将文件名中的 `x86_64` 改为 `arm64`。安装完成后访问：
 
 ```text
 http://设备IP:8080

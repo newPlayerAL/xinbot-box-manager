@@ -32,16 +32,16 @@ Do not expose the management interface directly to the public internet without H
 Download the package matching your device architecture from
 [GitHub Releases](https://github.com/newPlayerAL/xinbot-box-manager/releases/latest):
 
-- [AMD64 / x86-64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_amd64.deb)
-- [ARM64 / AArch64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_arm64.deb)
+- [x86_64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_x86_64.deb)
+- [arm64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_arm64.deb)
 
 Then install it with:
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_amd64.deb
+sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
 ```
 
-On ARM64 devices, replace `amd64` in the filename with `arm64`. After installation, open:
+On arm64 devices, replace `x86_64` in the filename with `arm64`. After installation, open:
 
 ```text
 http://DEVICE_IP:8080
