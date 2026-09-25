@@ -5,18 +5,31 @@ project_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$project_root"
 
 target=""
-if [[ ${1:-} == "--target" ]]; then
-    if [[ -z ${2:-} ]]; then
-        echo "--target requires a Rust target triple" >&2
-        exit 2
-    fi
-    target=$2
-    shift 2
-fi
-if (( $# != 0 )); then
-    echo "usage: $0 [--target RUST_TARGET]" >&2
-    exit 2
-fi
+resource_dir=""
+while (( $# > 0 )); do
+    case "$1" in
+        --target)
+            if [[ -z ${2:-} ]]; then
+                echo "--target requires a Rust target triple" >&2
+                exit 2
+            fi
+            target=$2
+            shift 2
+            ;;
+        --resources)
+            if [[ -z ${2:-} ]]; then
+                echo "--resources requires a directory" >&2
+                exit 2
+            fi
+            resource_dir=$2
+            shift 2
+            ;;
+        *)
+            echo "usage: $0 [--target RUST_TARGET] [--resources DIRECTORY]" >&2
+            exit 2
+            ;;
+    esac
+done
 
 command -v cargo >/dev/null || {
     echo "cargo is required to build the package" >&2
@@ -26,6 +39,31 @@ command -v dpkg-deb >/dev/null || {
     echo "dpkg-deb is required to build the package" >&2
     exit 1
 }
+command -v sha256sum >/dev/null || {
+    echo "sha256sum is required to verify bundled resources" >&2
+    exit 1
+}
+
+if [[ -z $resource_dir ]]; then
+    resource_dir=target/bundle-resources
+    ./scripts/fetch-bundle-resources.sh "$resource_dir"
+fi
+
+while IFS=$'\t' read -r file component_version checksum _download_url source_url license; do
+    if [[ -z $file || $file == \#* ]]; then
+        continue
+    fi
+    resource_path="$resource_dir/$file"
+    if [[ ! -f $resource_path ]]; then
+        echo "required bundled resource is missing: $resource_path" >&2
+        exit 1
+    fi
+    if ! printf '%s  %s\n' "$checksum" "$resource_path" | sha256sum --check --status; then
+        echo "checksum mismatch for bundled resource: $resource_path" >&2
+        exit 1
+    fi
+    echo "verified bundled resource $file ($component_version, $license, $source_url)"
+done <packaging/bundle-resources.tsv
 
 version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)
 if [[ -z $version ]]; then
@@ -71,8 +109,22 @@ install -Dm0644 \
 install -Dm0644 \
     resources/catalog.json \
     "$staging_dir/usr/share/xinbot-box-manager/resources/catalog.json"
+while IFS=$'\t' read -r file _; do
+    if [[ -z $file || $file == \#* ]]; then
+        continue
+    fi
+    install -Dm0644 \
+        "$resource_dir/$file" \
+        "$staging_dir/usr/share/xinbot-box-manager/resources/$file"
+done <packaging/bundle-resources.tsv
 install -Dm0644 README.md "$staging_dir/usr/share/doc/xinbot-box-manager/README.md"
 install -Dm0644 LICENSE "$staging_dir/usr/share/doc/xinbot-box-manager/copyright"
+install -Dm0644 \
+    packaging/bundle-resources.tsv \
+    "$staging_dir/usr/share/doc/xinbot-box-manager/bundled-components.tsv"
+install -Dm0644 \
+    packaging/BUNDLED-COMPONENTS.md \
+    "$staging_dir/usr/share/doc/xinbot-box-manager/BUNDLED-COMPONENTS.md"
 
 install -Dm0755 packaging/deb/postinst "$staging_dir/DEBIAN/postinst"
 install -Dm0755 packaging/deb/prerm "$staging_dir/DEBIAN/prerm"

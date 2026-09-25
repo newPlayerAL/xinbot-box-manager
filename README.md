@@ -34,15 +34,18 @@
 
 ## 仓库内容与外部资源
 
-本仓库保存管理端源码、插件目录元数据、文档和 systemd 模板，不包含 Java、XinBot Core
-或插件 JAR。运行前需要自行取得这些外部组件，并确认自己拥有使用和分发它们的权利。
+本 Git 仓库保存管理端源码、插件目录元数据、文档和 systemd 模板，不直接提交 Java、
+XinBot Core 或插件 JAR。完整 `.deb` 会在构建时取得固定版本的官方 Release JAR，核对
+SHA-256 后再打入安装包；版本、哈希、下载地址、源码地址和许可证记录在
+`packaging/bundle-resources.tsv`。
 
 `scripts/prepare-resources.sh` 只用于从本机已有的开发资源目录复制文件，不会联网下载，
 也不会把这些二进制文件加入 Git；`target/`、`data/`、日志和常见编辑器文件均已忽略。
 
 ## Debian / Ubuntu 一键安装
 
-当前可以在目标设备上构建 `.deb`，然后通过一条 APT 命令完成安装。安装包会创建低权限的
+当前可以在目标设备上构建完整 `.deb`，然后通过一条 APT 命令完成安装。构建脚本默认下载并
+校验 XinBot Core、XinMetaPlugin、BackToTheBase 和它依赖的 MovementSync。安装包会创建低权限的
 `xinbot` 系统用户、数据与资源目录，安装并启动 systemd 服务：
 
 ```shell
@@ -66,10 +69,16 @@ sudo systemctl restart xinbot-box-manager
 丢失实例、密码和配置。当前仓库暂不提供 GitHub Release，因而仍需先在目标设备上构建安装包；
 待项目功能和兼容性稳定后，可将相同构建流程接入 Release。
 
-安装包不包含 XinBot Core 和插件 JAR。可以将已取得的 JAR 放入
-`/var/lib/xinbot-box-manager/resources`，并保持 `xinbot:xinbot` 所有权，然后在网页“系统设置”
-中选择对应路径。Java 21 作为推荐依赖由 APT 尝试安装；如果当前发行版的软件源不提供它，
-需要先通过发行版或可信的 JDK 软件源安装 Java 21。
+Core 和上述三个插件会安装到 `/var/lib/xinbot-box-manager/resources`，首次打开时管理端会自动
+识别 Core 与资源目录，不需要用户再寻找 JAR。Java 17 或更高版本是软件包依赖，由 APT 一并
+安装。若发行版的软件源不提供兼容的 Java，需要先配置发行版或可信的 JDK 软件源。
+
+默认构建需要联网下载固定的官方 Release。已经准备好与清单哈希一致的四个 JAR 时，也可以
+进行离线构建：
+
+```shell
+./scripts/build-deb.sh --resources /path/to/verified-resources
+```
 
 构建脚本支持 Rust 交叉编译目标，例如：
 
@@ -110,9 +119,9 @@ GitHub Actions 会在 push 和 pull request 时执行同一组核心检查。
 
 ## 准备运行资源
 
-管理端不会在原型阶段自动下载 Java、XinBot Core 或插件。需要准备：
+不使用 `.deb`、而是直接运行开发构建时，需要自行准备：
 
-- Java 21；
+- Java 17 或更高版本；
 - XinBot Core JAR；
 - `resources/catalog.json`；
 - 目录中所列插件对应的 JAR。

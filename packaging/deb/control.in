@@ -4,9 +4,9 @@ Section: admin
 Priority: optional
 Architecture: @ARCHITECTURE@
 Maintainer: newPlayerAL <200553324+newPlayerAL@users.noreply.github.com>
-Depends: adduser, libc6, libgcc-s1
-Recommends: openjdk-21-jre-headless | java21-runtime-headless
+Depends: adduser, libc6, libgcc-s1, default-jre-headless (>= 2:1.17) | openjdk-17-jre-headless | java17-runtime-headless
 Homepage: https://github.com/newPlayerAL/xinbot-box-manager
-Description: lightweight web manager for XinBot instances
+Description: web manager and bundled runtime for XinBot instances
  XinBot Box Manager provides a browser-based interface for configuring and
  running a small number of isolated XinBot instances on a headless Linux host.
+ The package bundles XinBot Core, XinMetaPlugin, BackToTheBase and MovementSync.

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use ring::rand::SecureRandom;
 use serde::{Deserialize, Serialize};
 
@@ -120,9 +122,14 @@ pub struct GlobalSettings {
 
 impl GlobalSettings {
     pub fn with_resource_dir(resource_dir: String) -> Self {
+        let bundled_core = Path::new(&resource_dir).join("xinbot.jar");
         Self {
             java_path: "java".to_string(),
-            xinbot_jar: String::new(),
+            xinbot_jar: if bundled_core.is_file() {
+                bundled_core.to_string_lossy().into_owned()
+            } else {
+                String::new()
+            },
             resource_dir,
         }
     }

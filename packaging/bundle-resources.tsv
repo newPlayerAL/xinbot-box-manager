@@ -1,0 +1,5 @@
+# file	version	sha256	download_url	source_url	license
+xinbot.jar	2.4.3-RELEASE	601a870da7a4a617172c9fe145ea8bcbe8f7648deddd681e2c96d749cd14f853	https://github.com/huangdihd/xinbot/releases/download/2.4.3-RELEASE/xinbot-2.4.3-RELEASE.jar	https://github.com/huangdihd/xinbot/tree/2.4.3-RELEASE	GPL-3.0-or-later
+xinmetaplugin.jar	1.1.0-RELEASE	ad4f1e40e985b8ac53eb91b93cbc0facb6cca7e16200edd29923f7a4a32e8e99	https://github.com/huangdihd/XinMetaPlugin/releases/download/1.1.0-RELEASE/xinMetaPlugin-1.1.0-RELEASE.jar	https://github.com/huangdihd/XinMetaPlugin/tree/1.1.0-RELEASE	GPL-3.0-or-later
+backtothebase.jar	1.8.0-RELEASE	d40874d3af3889620b7da17b5311215fb0e3e5413c0ee47df1a3cd43e2660568	https://github.com/huangdihd/BackToTheBase/releases/download/1.8.0-RELEASE/BackToTheBase-1.8.0-RELEASE.jar	https://github.com/huangdihd/BackToTheBase/tree/1.8.0-RELEASE	GPL-3.0-or-later
+movementsync.jar	1.6.0-RELEASE	44d427558ec2b0ab536d50c2a625f1ab397be874bff312bc6c454be51730634e	https://github.com/huangdihd/MovementSync/releases/download/1.6.0-RELEASE/MovementSync-1.6.0-RELEASE.jar	https://github.com/huangdihd/MovementSync/tree/1.6.0-RELEASE	GPL-3.0-or-later

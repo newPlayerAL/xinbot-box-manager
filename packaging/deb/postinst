@@ -18,12 +18,20 @@ fi
 
 install -d -o xinbot -g xinbot -m 0700 /var/lib/xinbot-box-manager
 install -d -o xinbot -g xinbot -m 0700 /var/lib/xinbot-box-manager/resources
-install \
-    -o xinbot \
-    -g xinbot \
-    -m 0644 \
-    /usr/share/xinbot-box-manager/resources/catalog.json \
-    /var/lib/xinbot-box-manager/resources/catalog.json
+for resource in \
+    catalog.json \
+    xinbot.jar \
+    xinmetaplugin.jar \
+    backtothebase.jar \
+    movementsync.jar
+do
+    install \
+        -o xinbot \
+        -g xinbot \
+        -m 0644 \
+        "/usr/share/xinbot-box-manager/resources/$resource" \
+        "/var/lib/xinbot-box-manager/resources/$resource"
+done
 
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload

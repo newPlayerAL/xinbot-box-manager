@@ -237,7 +237,16 @@ mod tests {
     #[test]
     fn instance_round_trip_and_recoverable_delete() {
         let root = std::env::temp_dir().join(format!("xbm-store-{}", unique_suffix()));
-        let store = Store::new(root.clone(), PathBuf::from("resources")).unwrap();
+        let resources = root.join("bundled-resources");
+        fs::create_dir_all(&resources).unwrap();
+        fs::write(resources.join("xinbot.jar"), b"test fixture").unwrap();
+        let store = Store::new(root.clone(), resources.clone()).unwrap();
+        let settings = store.load_settings().unwrap();
+        assert_eq!(settings.resource_dir, resources.to_string_lossy());
+        assert_eq!(
+            settings.xinbot_jar,
+            resources.join("xinbot.jar").to_string_lossy()
+        );
         let created = store.create_instance(profile()).unwrap();
         assert_eq!(store.get_instance(&created.id).unwrap().name, "测试实例");
         assert_eq!(store.list_instances().unwrap().len(), 1);
