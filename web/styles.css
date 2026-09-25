@@ -134,7 +134,8 @@ button:disabled { opacity: .38; cursor: not-allowed; }
 .brand-mark { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 1.2rem; color: #071510; background: var(--accent); border-radius: 13px; font-weight: 900; letter-spacing: -.06em; }
 .brand-mark.small { width: 34px; height: 34px; margin: 0; border-radius: 9px; font-size: .78rem; }
 .stack { display: grid; gap: 1rem; margin-top: 1.5rem; }
-.auth-theme-toggle { position: absolute; top: 1rem; right: 1rem; }
+.auth-preferences { position: absolute; top: 1rem; right: 1rem; display: flex; gap: .45rem; }
+.language-toggle { min-width: 64px; }
 .theme-toggle { min-width: 64px; }
 .auth-note { margin: 1rem 0 0; color: var(--subtle); text-align: center; font-size: .75rem; }
 .form-error { min-height: 1.1em; margin: 0; color: var(--danger); font-size: .78rem; }

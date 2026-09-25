@@ -19,6 +19,8 @@ pub struct PluginConfigFile {
     pub format: String,
     #[serde(default)]
     pub label: String,
+    #[serde(default)]
+    pub label_en: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,11 +28,15 @@ pub struct PluginConfigFile {
 pub struct PluginDescriptor {
     pub id: String,
     pub name: String,
+    #[serde(default)]
+    pub name_en: String,
     #[serde(default = "default_version")]
     pub version: String,
     pub plugin_type: String,
     #[serde(default)]
     pub description: String,
+    #[serde(default)]
+    pub description_en: String,
     #[serde(default)]
     pub resource: String,
     #[serde(default)]
@@ -54,6 +60,7 @@ pub struct PluginConfigDocument {
     pub path: String,
     pub format: String,
     pub label: String,
+    pub label_en: String,
     pub exists: bool,
     pub content: String,
 }
@@ -277,6 +284,7 @@ pub fn read_plugin_config(
         path: spec.path,
         format: spec.format,
         label: spec.label,
+        label_en: spec.label_en,
         exists,
         content,
     })
@@ -308,6 +316,7 @@ pub fn write_plugin_config(
         path: spec.path,
         format: spec.format,
         label: spec.label,
+        label_en: spec.label_en,
         exists: true,
         content: content.to_string(),
     })

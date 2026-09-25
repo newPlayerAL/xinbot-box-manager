@@ -2,9 +2,11 @@
   {
     "id": "xinmeta",
     "name": "2b2t.xin 官方 Meta",
+    "nameEn": "Official Meta for 2b2t.xin",
     "version": "1.1.0-RELEASE",
     "pluginType": "META_PLUGIN",
     "description": "为 2b2t.xin 提供登录、答题、队列和自动进入游戏",
+    "descriptionEn": "Provides login, verification, queue handling, and automatic game entry for 2b2t.xin",
     "resource": "xinmetaplugin.jar",
     "loginMode": "plugin",
     "hostPatterns": ["2b2t.xin", "*.2b2t.xin"],
@@ -13,9 +15,11 @@
   {
     "id": "directconnect",
     "name": "DirectConnect 通用连接",
+    "nameEn": "DirectConnect generic connection",
     "version": "1.0.0",
     "pluginType": "META_PLUGIN",
     "description": "连接任意 Minecraft 服务器，支持自定义二次登录命令",
+    "descriptionEn": "Connects to any Minecraft server and supports custom secondary login commands",
     "resource": "directconnect.jar",
     "loginMode": "template",
     "hostPatterns": [],
@@ -27,6 +31,7 @@
     "version": "1.0.0-RELEASE",
     "pluginType": "PLUGIN",
     "description": "聊天消息过滤插件",
+    "descriptionEn": "Chat message filtering plugin",
     "resource": "chatfilter.jar",
     "loginMode": "none",
     "hostPatterns": [],
@@ -38,6 +43,7 @@
     "version": "1.6.0-RELEASE",
     "pluginType": "PLUGIN",
     "description": "为移动、寻路和方块交互提供基础能力",
+    "descriptionEn": "Provides movement, pathfinding, and block-interaction capabilities",
     "resource": "movementsync.jar",
     "loginMode": "none",
     "hostPatterns": [],
@@ -49,6 +55,7 @@
     "version": "1.8.0-RELEASE",
     "pluginType": "PLUGIN",
     "description": "按玩家和编号触发基地珍珠按钮",
+    "descriptionEn": "Triggers base pearl buttons by player and number",
     "resource": "backtothebase.jar",
     "loginMode": "none",
     "hostPatterns": [],
@@ -58,7 +65,8 @@
       {
         "path": "base_config.json",
         "format": "json",
-        "label": "BackToTheBase 配置"
+        "label": "BackToTheBase 配置",
+        "labelEn": "BackToTheBase configuration"
       }
     ]
   }

@@ -21,8 +21,8 @@ Do not expose the management interface directly to the public internet without H
   plugin dependency handling and dedicated Meta selection for known servers.
 - **BTTB configuration**: Edit players, pearl buttons, return points, and in-game administrators
   on a dedicated page.
-- **Web authentication**: A single administrator account, login rate limiting, light and dark
-  themes, and password recovery from the Linux console.
+- **Web authentication**: A single administrator account, login rate limiting, Chinese and English
+  UI, light and dark themes, and password recovery from the Linux console.
 - **Lightweight deployment**: A single Rust process with an embedded web interface. The `.deb`
   installs Core, XinMeta, BTTB, MovementSync, and a systemd service without requiring a persistent
   Node.js process.
