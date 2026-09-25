@@ -41,6 +41,11 @@ http://设备IP:8080
 首次打开会要求创建管理员账号。软件包会自动安装 Java 运行时、启用 systemd 服务，并准备
 XinBot Core 和内置插件。
 
+## 文档
+
+- [安装与运维](docs/installation.md)
+- [源码构建与开发](docs/development.md)
+
 ## 许可证
 
 本项目采用 [GNU GPL v3.0 或更高版本](LICENSE)。随安装包分发的 XinBot Core、插件和 Java
