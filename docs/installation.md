@@ -62,8 +62,7 @@ sudo apt install ./dist/xinbot-box-manager_0.1.0_$(dpkg --print-architecture).de
 ./scripts/build-deb.sh --target aarch64-unknown-linux-gnu
 ```
 
-这会生成 `arm64` 软件包。对于 H618、RK3518 等设备，在相同架构的 Linux 环境中原生构建
-通常更简单。
+这会生成 `arm64` 软件包。也可以直接在 ARM64 Linux 环境中原生构建。
 
 ## 服务和目录
 

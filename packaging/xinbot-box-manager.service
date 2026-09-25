@@ -21,8 +21,5 @@ ProtectSystem=strict
 ProtectHome=true
 ReadWritePaths=/var/lib/xinbot-box-manager
 
-# 在 2 GB 设备上完成实机测试后，可以考虑启用整个服务 cgroup 的保护上限。
-# MemoryMax=1700M
-
 [Install]
 WantedBy=multi-user.target

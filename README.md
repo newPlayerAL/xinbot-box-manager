@@ -1,6 +1,6 @@
 # XinBot Box Manager
 
-面向无头 Linux 迷你主机的轻量 XinBot 网页管理端。通过一个浏览器入口管理少量相互隔离的
+面向无头 Linux 主机的轻量 XinBot 网页管理端。通过一个浏览器入口管理多个相互隔离的
 XinBot 实例，适合 BTTB、消息响应等常驻场景。
 
 > 项目目前处于 `0.1.x` 原型阶段，功能和接口仍可能调整。请勿把未启用 HTTPS 的管理端
@@ -10,15 +10,13 @@ XinBot 实例，适合 BTTB、消息响应等常驻场景。
 
 ## 主要功能
 
-- **多实例管理**：创建、编辑、可恢复删除和运行 1～3 个隔离的 XinBot 实例；
+- **多实例管理**：创建、编辑、可恢复删除和运行多个隔离的 XinBot 实例；
 - **运行控制**：启动、停止、重启、发送控制台命令，并实时查看日志、PID、CPU 和内存；
 - **配置与插件**：管理 Core、Meta 和普通插件，自动处理插件依赖及已知服务器的专用 Meta；
 - **BTTB 配置**：通过专用页面编辑玩家、珍珠按钮、返回点和游戏内管理员；
 - **网页认证**：单管理员账号、登录限速、浅色/深色主题，以及 Linux 控制台密码恢复；
 - **轻量部署**：Rust 单进程内嵌网页，`.deb` 同时安装 Core、XinMeta、BTTB、MovementSync
   和 systemd 服务，无需常驻 Node.js。
-
-第一版不包含 XinManager、XinRemote、世界/区块/3D 查看、多用户或角色权限。
 
 ## 快速安装
 
@@ -51,7 +49,6 @@ XinBot Core 和内置插件。
 - [安装与运维](docs/installation.md)
 - [源码构建与开发](docs/development.md)
 - [当前实现与验证状态](docs/implementation-status.md)
-- [前期方案讨论稿（未确认）](docs/discussion-draft.md)
 - [参与贡献](CONTRIBUTING.md)
 - [安全策略](SECURITY.md)
 

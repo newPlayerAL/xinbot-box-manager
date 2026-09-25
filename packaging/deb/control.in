@@ -8,5 +8,5 @@ Depends: adduser, libc6, libgcc-s1, default-jre-headless (>= 2:1.17) | openjdk-1
 Homepage: https://github.com/newPlayerAL/xinbot-box-manager
 Description: web manager and bundled runtime for XinBot instances
  XinBot Box Manager provides a browser-based interface for configuring and
- running a small number of isolated XinBot instances on a headless Linux host.
+ running multiple isolated XinBot instances on a headless Linux host.
  The package bundles XinBot Core, XinMetaPlugin, BackToTheBase and MovementSync.

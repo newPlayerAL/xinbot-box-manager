@@ -33,6 +33,5 @@ node --check web/app.js
 - 保持 `Cargo.lock` 与源码一致；
 - 行为变化应同步更新 README 或 `docs/implementation-status.md`；
 - 新增业务规则时优先增加自动化测试；
-- 不要把讨论稿中的设想当作已经确认的需求。
 
 提交 Pull Request 时，请简要说明变更目的、验证命令、可见界面变化以及尚未覆盖的风险。

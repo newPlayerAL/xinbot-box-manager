@@ -103,7 +103,7 @@ impl InstanceProfile {
             return Err("JVM 初始堆不能大于最大堆".to_string());
         }
         if self.xmx_mb > 1024 {
-            return Err("第一版单实例最大堆上限不能超过 1024 MB".to_string());
+            return Err("单实例最大堆上限不能超过 1024 MB".to_string());
         }
         if self.server_password.chars().count() > 512 {
             return Err("二级登录密码过长".to_string());
