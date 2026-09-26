@@ -427,6 +427,16 @@ fn write_xinbot_config(path: &Path, profile: &InstanceProfile) -> Result<(), Str
         .and_then(|text| serde_json::from_str::<Value>(&text).ok())
         .and_then(|root| root.get("account")?.get("fullSession").cloned())
         .unwrap_or(Value::Null);
+    let proxy_info = if profile.proxy_enabled {
+        json!({
+            "address": profile.proxy_address,
+            "type": profile.proxy_type,
+            "password": profile.proxy_password,
+            "username": profile.proxy_username
+        })
+    } else {
+        json!({ "address": "", "type": "", "password": "", "username": "" })
+    };
     let config = json!({
         "account": {
             "fullSession": full_session,
@@ -439,8 +449,8 @@ fn write_xinbot_config(path: &Path, profile: &InstanceProfile) -> Result<(), Str
         "owner": profile.username,
         "plugin": { "directory": "plugins" },
         "proxy": {
-            "enable": false,
-            "info": { "address": "", "type": "", "password": "", "username": "" }
+            "enable": profile.proxy_enabled,
+            "info": proxy_info
         },
         "reconnectDelay": 3000,
         "reconnectTimeout": 5000,
@@ -610,7 +620,7 @@ mod tests {
         );
         let root = std::env::temp_dir().join(format!("xbm-config-{unique}"));
         fs::create_dir_all(&root).unwrap();
-        let profile = InstanceProfile {
+        let mut profile = InstanceProfile {
             id: "0123456789abcdef0123456789abcdef".to_string(),
             name: "bot".into(),
             host: "example.org".into(),
@@ -619,6 +629,11 @@ mod tests {
             server_password: "secret".into(),
             online_mode: false,
             login_template: "/login {password}".into(),
+            proxy_enabled: true,
+            proxy_type: "SOCKS5".into(),
+            proxy_address: "127.0.0.1:1080".into(),
+            proxy_username: "proxy-user".into(),
+            proxy_password: "proxy-password".into(),
             meta_plugin_id: "directconnect".into(),
             enabled_plugin_ids: vec![],
             xms_mb: 32,
@@ -629,6 +644,19 @@ mod tests {
         let value: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(value["enableTranslation"], false);
         assert_eq!(value["telemetry"]["enable"], false);
+        assert_eq!(value["proxy"]["enable"], true);
+        assert_eq!(value["proxy"]["info"]["type"], "SOCKS5");
+        assert_eq!(value["proxy"]["info"]["address"], "127.0.0.1:1080");
+        assert_eq!(value["proxy"]["info"]["username"], "proxy-user");
+        assert_eq!(value["proxy"]["info"]["password"], "proxy-password");
+        profile.proxy_enabled = false;
+        write_xinbot_config(&path, &profile).unwrap();
+        let value: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(value["proxy"]["enable"], false);
+        assert_eq!(value["proxy"]["info"]["type"], "");
+        assert_eq!(value["proxy"]["info"]["address"], "");
+        assert_eq!(value["proxy"]["info"]["username"], "");
+        assert_eq!(value["proxy"]["info"]["password"], "");
         fs::remove_dir_all(root).unwrap();
     }
 }

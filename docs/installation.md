@@ -118,8 +118,9 @@ sudo /usr/bin/xinbot-box-manager admin reset-password \
 └── audit.log          # 本机密码重置记录，不含密码
 ```
 
-Minecraft 登录密码需要保存在本机实例配置中才能无人值守启动。请保持数据目录仅由专用系统
-用户访问。
+Minecraft 二级登录密码和代理凭据需要保存在本机实例配置中才能无人值守启动，并且不加密。
+请保持数据目录仅由专用系统用户访问。实例中的代理设置只作用于 XinBot Core 到 Minecraft
+服务器的连接，不作用于网页管理端、Java 下载或 Microsoft 账号认证。
 
 ## 网络安全
 

@@ -60,6 +60,15 @@ const EN_TEXT = {
   "Box Manager 不会再发送重复的登录命令。": "Box Manager will not send a duplicate login command.",
   "Microsoft 正版模式": "Microsoft online mode",
   "由 XinBot Core 使用保存的在线会话；启用时不发送二级登录命令": "XinBot Core uses the saved online session; secondary login commands are not sent when enabled",
+  "服务器连接代理": "Server connection proxy",
+  "当前实例单独设置": "Configured separately for this instance",
+  "启用代理": "Enable proxy",
+  "支持 HTTP、SOCKS4 和 SOCKS5": "Supports HTTP, SOCKS4, and SOCKS5",
+  "代理类型": "Proxy type",
+  "代理地址": "Proxy address",
+  "代理用户名（可选）": "Proxy username (optional)",
+  "代理密码（可选）": "Proxy password (optional)",
+  "仅代理 XinBot Core 到 Minecraft 服务器的连接；Java 下载、网页与 Microsoft 登录不使用此设置。代理凭据保存在本机实例配置中，且不加密。": "Only the connection from XinBot Core to the Minecraft server uses this proxy. Java downloads, web access, and Microsoft authentication do not. Proxy credentials are stored unencrypted in the local instance configuration.",
   "运行参数": "Runtime options",
   "单实例 JVM 内存限制": "Per-instance JVM memory limits",
   "JVM 初始堆（MB）": "Initial JVM heap (MB)",
@@ -245,6 +254,11 @@ const EN_TEXT = {
   "JVM 初始堆不能大于最大堆": "The initial JVM heap cannot exceed the maximum heap",
   "单实例最大堆上限不能超过 1024 MB": "The per-instance maximum heap cannot exceed 1024 MB",
   "二级登录密码过长": "The secondary login password is too long",
+  "代理用户名不能超过 256 个字符": "The proxy username cannot exceed 256 characters",
+  "代理地址不能超过 512 个字符": "The proxy address cannot exceed 512 characters",
+  "代理密码不能超过 512 个字符": "The proxy password cannot exceed 512 characters",
+  "代理类型只能是 HTTP、SOCKS4 或 SOCKS5": "The proxy type must be HTTP, SOCKS4, or SOCKS5",
+  "代理地址应使用“主机:端口”格式，例如 127.0.0.1:1080": "Use host:port format for the proxy address, for example 127.0.0.1:1080",
   "该实例正在启动或已经运行": "This instance is starting or already running",
   "实例尚未运行": "The instance is not running",
   "实例不存在": "The instance does not exist",
@@ -430,6 +444,7 @@ function refreshLocalizedUi() {
     renderEditorHeading();
     renderPlugins(state.draft);
     renderLoginBehavior();
+    renderProxySettings();
     renderRuntime();
   }
   if (ui.settingsDialog.open) renderSettingsHealth();
@@ -536,6 +551,7 @@ function bindEvents() {
   byId("plugin-config-raw-button").addEventListener("click", () => switchPluginConfigMode("raw"));
   byId("instance-password").addEventListener("input", renderLoginBehavior);
   byId("instance-online").addEventListener("change", renderLoginBehavior);
+  byId("instance-proxy-enabled").addEventListener("change", renderProxySettings);
   byId("instance-host").addEventListener("input", handleServerTargetChange);
   document.querySelectorAll(".dialog-close").forEach((button) => {
     button.addEventListener("click", () => button.closest("dialog").close());
@@ -577,6 +593,11 @@ function emptyDraft() {
     serverPassword: "",
     onlineMode: false,
     loginTemplate: "/login {password}",
+    proxyEnabled: false,
+    proxyType: "SOCKS5",
+    proxyAddress: "",
+    proxyUsername: "",
+    proxyPassword: "",
     metaPluginId: genericMeta?.id || "directconnect",
     enabledPluginIds: [],
     xmsMb: 32,
@@ -802,11 +823,19 @@ function renderEditor() {
   byId("instance-password").value = profile.serverPassword || "";
   byId("instance-online").checked = profile.onlineMode;
   byId("instance-login-template").value = profile.loginTemplate || "";
+  byId("instance-proxy-enabled").checked = Boolean(profile.proxyEnabled);
+  byId("instance-proxy-type").value = ["HTTP", "SOCKS4", "SOCKS5"].includes(profile.proxyType)
+    ? profile.proxyType
+    : "SOCKS5";
+  byId("instance-proxy-address").value = profile.proxyAddress || "";
+  byId("instance-proxy-username").value = profile.proxyUsername || "";
+  byId("instance-proxy-password").value = profile.proxyPassword || "";
   byId("instance-xms").value = profile.xmsMb ?? 32;
   byId("instance-xmx").value = profile.xmxMb ?? 256;
   ui.instanceError.textContent = "";
   renderPlugins(profile);
   renderLoginBehavior();
+  renderProxySettings();
   renderRuntime();
   const exists = Boolean(profile.id);
   byId("delete-button").disabled = !exists;
@@ -1044,6 +1073,16 @@ function renderLoginBehavior() {
   }
   copy.append(title, detail);
   note.append(marker, copy);
+}
+
+function renderProxySettings() {
+  const enabled = byId("instance-proxy-enabled").checked;
+  const fields = byId("instance-proxy-fields");
+  fields.classList.toggle("hidden", !enabled);
+  fields.querySelectorAll("input, select").forEach((field) => {
+    field.disabled = !enabled;
+  });
+  byId("instance-proxy-address").required = enabled;
 }
 
 function renderPluginConfigActions(profile) {
@@ -1502,6 +1541,11 @@ function collectForm() {
     serverPassword: byId("instance-password").value,
     onlineMode: byId("instance-online").checked,
     loginTemplate: byId("instance-login-template").value.trim(),
+    proxyEnabled: byId("instance-proxy-enabled").checked,
+    proxyType: byId("instance-proxy-type").value,
+    proxyAddress: byId("instance-proxy-address").value.trim(),
+    proxyUsername: byId("instance-proxy-username").value.trim(),
+    proxyPassword: byId("instance-proxy-password").value,
     metaPluginId: state.draft?.metaPluginId || "directconnect",
     enabledPluginIds: [...document.querySelectorAll('input[name="ordinary-plugin"]:checked')].map((item) => item.value),
     xmsMb: Number(byId("instance-xms").value),

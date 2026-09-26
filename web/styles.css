@@ -220,6 +220,7 @@ button:disabled { opacity: .38; cursor: not-allowed; }
 .subsection-title { margin-bottom: .7rem; }
 .subsection-title span { color: var(--muted); font-size: .7rem; }
 .section-help { margin: -.2rem 0 .75rem; color: var(--muted); font-size: .74rem; line-height: 1.5; }
+.proxy-help { margin: .75rem 0 0; }
 .field-help { display: block; margin-top: .4rem; color: var(--muted); font-size: .7rem; font-weight: 500; line-height: 1.45; }
 .field-help code { color: var(--accent-strong); font: inherit; font-weight: 750; }
 .login-mode-note, .managed-login-note { display: flex; gap: .65rem; margin-top: .7rem; padding: .72rem .8rem; color: var(--label); background: var(--accent-soft); border: 1px solid var(--note-border); border-radius: 9px; font-size: .73rem; line-height: 1.45; }

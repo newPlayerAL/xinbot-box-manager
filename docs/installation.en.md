@@ -125,8 +125,10 @@ required.
 └── audit.log          # Local password-reset records; contains no passwords
 ```
 
-Minecraft login passwords must be stored in the local instance configuration for unattended
-startup. Keep the data directory accessible only to the dedicated system user.
+Minecraft secondary-login passwords and proxy credentials must be stored unencrypted in the local
+instance configuration for unattended startup. Keep the data directory accessible only to the
+dedicated system user. An instance proxy applies only to XinBot Core's Minecraft server connection,
+not the web manager, Java downloads, or Microsoft authentication.
 
 ## Network security
 

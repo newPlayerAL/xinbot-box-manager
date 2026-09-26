@@ -193,6 +193,39 @@
                 </div>
 
                 <div class="subsection">
+                  <div class="subsection-title"><h3>服务器连接代理</h3><span>当前实例单独设置</span></div>
+                  <div class="form-grid two">
+                    <label class="span-two toggle-row">
+                      <span><strong>启用代理</strong><small>支持 HTTP、SOCKS4 和 SOCKS5</small></span>
+                      <input id="instance-proxy-enabled" type="checkbox" />
+                    </label>
+                    <div id="instance-proxy-fields" class="form-grid two span-two hidden">
+                      <label>
+                        代理类型
+                        <select id="instance-proxy-type">
+                          <option value="SOCKS5">SOCKS5</option>
+                          <option value="SOCKS4">SOCKS4</option>
+                          <option value="HTTP">HTTP</option>
+                        </select>
+                      </label>
+                      <label>
+                        代理地址
+                        <input id="instance-proxy-address" maxlength="512" placeholder="127.0.0.1:1080" />
+                      </label>
+                      <label>
+                        代理用户名（可选）
+                        <input id="instance-proxy-username" maxlength="256" autocomplete="off" />
+                      </label>
+                      <label>
+                        代理密码（可选）
+                        <input id="instance-proxy-password" type="password" maxlength="512" autocomplete="off" />
+                      </label>
+                    </div>
+                  </div>
+                  <p class="section-help proxy-help">仅代理 XinBot Core 到 Minecraft 服务器的连接；Java 下载、网页与 Microsoft 登录不使用此设置。代理凭据保存在本机实例配置中，且不加密。</p>
+                </div>
+
+                <div class="subsection">
                   <div class="subsection-title"><h3>运行参数</h3><span>单实例 JVM 内存限制</span></div>
                   <div class="form-grid two">
                     <label>

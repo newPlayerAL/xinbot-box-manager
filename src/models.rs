@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{net::Ipv6Addr, path::Path};
 
 use ring::rand::SecureRandom;
 use serde::{Deserialize, Serialize};
@@ -19,6 +19,10 @@ fn default_xmx_mb() -> u32 {
     256
 }
 
+fn default_proxy_type() -> String {
+    "SOCKS5".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstanceProfile {
@@ -35,6 +39,16 @@ pub struct InstanceProfile {
     pub online_mode: bool,
     #[serde(default = "default_login_template")]
     pub login_template: String,
+    #[serde(default)]
+    pub proxy_enabled: bool,
+    #[serde(default = "default_proxy_type")]
+    pub proxy_type: String,
+    #[serde(default)]
+    pub proxy_address: String,
+    #[serde(default)]
+    pub proxy_username: String,
+    #[serde(default)]
+    pub proxy_password: String,
     #[serde(default = "default_meta_plugin")]
     pub meta_plugin_id: String,
     #[serde(default)]
@@ -71,6 +85,9 @@ impl InstanceProfile {
         self.host = self.host.trim().to_string();
         self.username = self.username.trim().to_string();
         self.login_template = self.login_template.trim().to_string();
+        self.proxy_type = self.proxy_type.trim().to_ascii_uppercase();
+        self.proxy_address = self.proxy_address.trim().to_string();
+        self.proxy_username = self.proxy_username.trim().to_string();
         self.meta_plugin_id = self.meta_plugin_id.trim().to_string();
         self.enabled_plugin_ids.sort();
         self.enabled_plugin_ids.dedup();
@@ -108,8 +125,48 @@ impl InstanceProfile {
         if self.server_password.chars().count() > 512 {
             return Err("二级登录密码过长".to_string());
         }
+        if self.proxy_username.chars().count() > 256 {
+            return Err("代理用户名不能超过 256 个字符".to_string());
+        }
+        if self.proxy_address.chars().count() > 512 {
+            return Err("代理地址不能超过 512 个字符".to_string());
+        }
+        if self.proxy_password.chars().count() > 512 {
+            return Err("代理密码不能超过 512 个字符".to_string());
+        }
+        if self.proxy_enabled {
+            if !matches!(self.proxy_type.as_str(), "HTTP" | "SOCKS4" | "SOCKS5") {
+                return Err("代理类型只能是 HTTP、SOCKS4 或 SOCKS5".to_string());
+            }
+            if !valid_proxy_address(&self.proxy_address) {
+                return Err("代理地址应使用“主机:端口”格式，例如 127.0.0.1:1080".to_string());
+            }
+        }
         Ok(())
     }
+}
+
+fn valid_proxy_address(address: &str) -> bool {
+    if let Some(rest) = address.strip_prefix('[') {
+        let Some((host, port)) = rest.split_once("]:") else {
+            return false;
+        };
+        return host.parse::<Ipv6Addr>().is_ok() && valid_port(port);
+    }
+    let Some((host, port)) = address.rsplit_once(':') else {
+        return false;
+    };
+    !host.is_empty()
+        && !host.chars().any(|character| {
+            character.is_whitespace() || character.is_control() || ":/[]".contains(character)
+        })
+        && valid_port(port)
+}
+
+fn valid_port(port: &str) -> bool {
+    !port.is_empty()
+        && port.chars().all(|character| character.is_ascii_digit())
+        && port.parse::<u16>().is_ok_and(|port| port > 0)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -169,4 +226,34 @@ pub struct RuntimeStatus {
     pub started_at: Option<u64>,
     pub rss_bytes: Option<u64>,
     pub cpu_percent: Option<f64>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{valid_proxy_address, InstanceProfile};
+
+    #[test]
+    fn validates_proxy_host_and_port() {
+        assert!(valid_proxy_address("127.0.0.1:1080"));
+        assert!(valid_proxy_address("proxy.example.org:8080"));
+        assert!(valid_proxy_address("[::1]:1080"));
+        assert!(!valid_proxy_address("proxy.example.org"));
+        assert!(!valid_proxy_address("proxy.example.org:0"));
+        assert!(!valid_proxy_address("proxy.example.org:+80"));
+        assert!(!valid_proxy_address("::1:1080"));
+    }
+
+    #[test]
+    fn legacy_profile_defaults_to_proxy_disabled() {
+        let mut profile: InstanceProfile = serde_json::from_value(serde_json::json!({
+            "name": "Legacy",
+            "host": "example.org",
+            "username": "Bot"
+        }))
+        .unwrap();
+        profile.normalize_and_validate().unwrap();
+        assert!(!profile.proxy_enabled);
+        assert_eq!(profile.proxy_type, "SOCKS5");
+        assert!(profile.proxy_address.is_empty());
+    }
 }

@@ -19,6 +19,8 @@ Do not expose the management interface directly to the public internet without H
   PIDs, CPU usage, and memory usage in real time.
 - **Configuration and plugins**: Manage Core, Meta, and regular plugins, including automatic
   plugin dependency handling and dedicated Meta selection for known servers.
+- **Per-instance proxies**: Configure an HTTP, SOCKS4, or SOCKS5 server-connection proxy for each
+  instance.
 - **BTTB configuration**: Edit players, pearl buttons, return points, and in-game administrators
   on a dedicated page.
 - **Web authentication**: A single administrator account, login rate limiting, Chinese and English
