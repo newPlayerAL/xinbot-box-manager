@@ -16,13 +16,13 @@ matching your device architecture and install it with APT.
 On x86_64 devices:
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
+sudo apt install ./xinbot-box-manager_0.1.1_x86_64.deb
 ```
 
 On arm64 devices:
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_arm64.deb
+sudo apt install ./xinbot-box-manager_0.1.1_arm64.deb
 ```
 
 The package:
@@ -45,7 +45,7 @@ internet connection is also required to download the pinned XinBot Core and plug
 git clone https://github.com/newPlayerAL/xinbot-box-manager.git
 cd xinbot-box-manager
 ./scripts/build-deb.sh
-sudo apt install ./dist/xinbot-box-manager_0.1.0_x86_64.deb
+sudo apt install ./dist/xinbot-box-manager_0.1.1_x86_64.deb
 ```
 
 On an arm64 build host, replace `x86_64` in the final command with `arm64`.

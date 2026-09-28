@@ -14,13 +14,13 @@
 x86_64 设备：
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
+sudo apt install ./xinbot-box-manager_0.1.1_x86_64.deb
 ```
 
 arm64 设备：
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_arm64.deb
+sudo apt install ./xinbot-box-manager_0.1.1_arm64.deb
 ```
 
 软件包会：
@@ -42,7 +42,7 @@ sudo apt install ./xinbot-box-manager_0.1.0_arm64.deb
 git clone https://github.com/newPlayerAL/xinbot-box-manager.git
 cd xinbot-box-manager
 ./scripts/build-deb.sh
-sudo apt install ./dist/xinbot-box-manager_0.1.0_x86_64.deb
+sudo apt install ./dist/xinbot-box-manager_0.1.1_x86_64.deb
 ```
 
 在 arm64 构建机上，将最后一条命令中的 `x86_64` 改为 `arm64`。

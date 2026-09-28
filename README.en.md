@@ -6,7 +6,7 @@ A lightweight web-based XinBot manager for headless Linux hosts. It provides a s
 interface for managing multiple isolated XinBot instances and is suitable for persistent tasks
 such as BTTB and message responses.
 
-Current version: `0.1.0`
+Current version: `0.1.1`
 
 Do not expose the management interface directly to the public internet without HTTPS.
 
@@ -35,13 +35,13 @@ Do not expose the management interface directly to the public internet without H
 Download the package matching your device architecture from
 [GitHub Releases](https://github.com/newPlayerAL/xinbot-box-manager/releases/latest):
 
-- [x86_64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_x86_64.deb)
-- [arm64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.0/xinbot-box-manager_0.1.0_arm64.deb)
+- [x86_64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.1/xinbot-box-manager_0.1.1_x86_64.deb)
+- [arm64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.1/xinbot-box-manager_0.1.1_arm64.deb)
 
 Then install it with:
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.0_x86_64.deb
+sudo apt install ./xinbot-box-manager_0.1.1_x86_64.deb
 ```
 
 On arm64 devices, replace `x86_64` in the filename with `arm64`. After installation, open:

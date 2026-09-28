@@ -64,7 +64,7 @@ async fn run() -> Result<(), String> {
         .await
         .map_err(|error| format!("无法监听 {}：{error}", options.bind))?;
 
-    println!("XinBot Box Manager 0.1.0");
+    println!("XinBot Box Manager {}", env!("CARGO_PKG_VERSION"));
     println!("管理地址：http://{}", options.bind);
     println!("数据目录：{}", options.data_dir.display());
     if options.bind.ip().is_unspecified() {
