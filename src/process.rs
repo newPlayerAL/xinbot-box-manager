@@ -453,20 +453,7 @@ fn write_xinbot_config(path: &Path, profile: &InstanceProfile) -> Result<(), Str
             "info": proxy_info
         },
         "reconnectDelay": 3000,
-        "reconnectTimeout": 5000,
-        "telemetry": {
-            "enable": false,
-            "ip": "127.0.0.1",
-            "key": "",
-            "mode": "udp",
-            "port": 9000,
-            "sendBot": true,
-            "sendPlayers": true,
-            "sendServer": true,
-            "sendState": true,
-            "sendSystem": true,
-            "sendUptime": true
-        }
+        "reconnectTimeout": 5000
     });
     let text = serde_json::to_string_pretty(&config)
         .map_err(|error| format!("无法生成 XinBot 配置：{error}"))?;
@@ -609,7 +596,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn config_disables_optional_background_features() {
+    fn config_matches_supported_core_schema() {
         let unique = format!(
             "{}-{}",
             std::process::id(),
@@ -643,7 +630,8 @@ mod tests {
         write_xinbot_config(&path, &profile).unwrap();
         let value: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(value["enableTranslation"], false);
-        assert_eq!(value["telemetry"]["enable"], false);
+        assert_eq!(value["checkForUpdates"], false);
+        assert!(value.get("telemetry").is_none());
         assert_eq!(value["proxy"]["enable"], true);
         assert_eq!(value["proxy"]["info"]["type"], "SOCKS5");
         assert_eq!(value["proxy"]["info"]["address"], "127.0.0.1:1080");

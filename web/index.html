@@ -122,10 +122,17 @@
 
         <div id="editor" class="editor hidden">
           <section class="hero-panel">
-            <div>
+            <div class="hero-copy">
               <p class="eyebrow">SELECTED INSTANCE</p>
               <h1 id="editor-title">新实例</h1>
               <p id="editor-subtitle" class="muted">尚未保存</p>
+              <div id="configuration-summary" class="configuration-summary hidden">
+                <span><b>连接</b><strong id="summary-connection">—</strong></span>
+                <span><b>账号</b><strong id="summary-account">—</strong></span>
+                <span><b>Meta</b><strong id="summary-meta">—</strong></span>
+                <span><b>插件</b><strong id="summary-plugins">—</strong></span>
+                <button id="edit-config-button" class="ghost" type="button">修改配置</button>
+              </div>
             </div>
             <div class="runtime-card">
               <span id="runtime-dot" class="status-dot"></span>
@@ -137,7 +144,10 @@
             <section class="panel config-panel">
               <div class="section-title">
                 <div><p class="eyebrow">CONFIGURATION</p><h2>连接与运行</h2></div>
-                <span id="save-state" class="save-state"></span>
+                <div class="config-heading-actions">
+                  <span id="save-state" class="save-state"></span>
+                  <button id="collapse-config-button" class="text-button" type="button">收起配置</button>
+                </div>
               </div>
               <form id="instance-form">
                 <div class="form-grid two">
@@ -147,7 +157,7 @@
                   </label>
                   <label>
                     服务器地址
-                    <input id="instance-host" placeholder="2b2t.xin" required />
+                    <input id="instance-host" placeholder="请填写服务器地址" required />
                     <small id="instance-host-note" class="field-help">输入地址后自动选择对应的服务器适配。</small>
                   </label>
                   <label>

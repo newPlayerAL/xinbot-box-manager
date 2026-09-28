@@ -42,6 +42,7 @@ const EN_TEXT = {
   "实例名称": "Instance name",
   "例如：基地返回机器人": "For example: Base return bot",
   "服务器地址": "Server address",
+  "请填写服务器地址": "Enter server address",
   "输入地址后自动选择对应的服务器适配。": "Enter an address to select the matching server adapter automatically.",
   "端口（可选）": "Port (optional)",
   "服务器适配": "Server adapter",
@@ -76,6 +77,11 @@ const EN_TEXT = {
   "依赖会自动加入": "Dependencies are added automatically",
   "移到回收目录": "Move to trash",
   "保存实例": "Save instance",
+  "收起配置": "Collapse configuration",
+  "修改配置": "Edit configuration",
+  "连接": "Connection",
+  "插件": "Plugins",
+  "未选择": "Not selected",
   "运行控制": "Runtime controls",
   "启动": "Start",
   "重启": "Restart",
@@ -342,6 +348,8 @@ const state = {
   refreshTimer: null,
   pluginConfig: null,
   activeView: "instances",
+  configurationCollapsed: false,
+  logRequestToken: 0,
 };
 
 const ui = {
@@ -536,6 +544,8 @@ function bindEvents() {
   byId("plugin-type-filter").addEventListener("change", renderPluginManager);
   ui.instanceForm.addEventListener("submit", saveInstance);
   byId("delete-button").addEventListener("click", deleteInstance);
+  byId("collapse-config-button").addEventListener("click", () => setConfigurationCollapsed(true));
+  byId("edit-config-button").addEventListener("click", () => setConfigurationCollapsed(false));
   byId("start-button").addEventListener("click", () => processAction("start"));
   byId("stop-button").addEventListener("click", () => processAction("stop"));
   byId("restart-button").addEventListener("click", () => processAction("restart"));
@@ -609,6 +619,7 @@ function newInstance() {
   state.activeView = "instances";
   state.selectedId = null;
   state.draft = emptyDraft();
+  state.configurationCollapsed = false;
   renderList();
   renderEditor();
 }
@@ -626,19 +637,25 @@ function showEmpty() {
 async function selectInstance(id) {
   const profile = state.instances.find((item) => item.id === id);
   if (!profile) return;
+  const logRequestToken = ++state.logRequestToken;
   state.activeView = "instances";
   state.selectedId = id;
   state.draft = structuredClone(profile);
   state.draft._savedMetaPluginId = profile.metaPluginId;
+  state.configurationCollapsed = Boolean(runtimeFor(id));
+  ui.console.textContent = "";
   renderList();
   renderEditor();
   try {
     const logs = await api(`/api/instances/${id}/logs`);
+    if (state.selectedId !== id || state.logRequestToken !== logRequestToken) return;
     ui.console.textContent = "";
     logs.forEach(appendLog);
     scrollConsole();
   } catch (error) {
-    notify(error.message, true);
+    if (state.selectedId === id && state.logRequestToken === logRequestToken) {
+      notify(error.message, true);
+    }
   }
 }
 
@@ -837,6 +854,7 @@ function renderEditor() {
   renderLoginBehavior();
   renderProxySettings();
   renderRuntime();
+  renderConfigurationLayout();
   const exists = Boolean(profile.id);
   byId("delete-button").disabled = !exists;
 }
@@ -848,6 +866,38 @@ function renderEditorHeading() {
   byId("editor-subtitle").textContent = profile.id
     ? `${profile.username || t("未设置账号")} · ${profile.host || t("未设置服务器")}`
     : t("尚未保存");
+}
+
+function setConfigurationCollapsed(collapsed) {
+  if (!state.draft?.id && collapsed) return;
+  state.configurationCollapsed = Boolean(collapsed);
+  renderConfigurationLayout();
+}
+
+function renderConfigurationLayout() {
+  const collapsed = Boolean(state.configurationCollapsed && state.draft?.id);
+  byId("configuration-summary").classList.toggle("hidden", !collapsed);
+  byId("editor").querySelector(".workspace-grid").classList.toggle("configuration-collapsed", collapsed);
+  byId("collapse-config-button").disabled = !state.draft?.id;
+  const runtime = runtimeFor(state.draft?.id);
+  byId("edit-config-button").disabled = Boolean(runtime);
+  byId("edit-config-button").title = runtime ? t("请先停止实例再修改配置") : "";
+  renderConfigurationSummary();
+}
+
+function renderConfigurationSummary() {
+  if (!state.draft) return;
+  const host = byId("instance-host").value.trim();
+  const port = byId("instance-port").value.trim();
+  const username = byId("instance-username").value.trim();
+  const meta = serverAdapterForHost(host).plugin || selectedMetaPlugin();
+  const enabledPlugins = document.querySelectorAll('input[name="ordinary-plugin"]:checked').length;
+  byId("summary-connection").textContent = host ? `${host}${port ? `:${port}` : ""}` : t("未设置服务器");
+  byId("summary-account").textContent = username || t("未设置账号");
+  byId("summary-meta").textContent = meta ? localizedPluginName(meta) : t("未选择");
+  byId("summary-plugins").textContent = currentLanguage === "en"
+    ? `${enabledPlugins} enabled`
+    : `${enabledPlugins} 个已启用`;
 }
 
 function renderPlugins(profile) {
@@ -1612,6 +1662,7 @@ async function processAction(action) {
   button.disabled = true;
   try {
     await api(`/api/instances/${state.draft.id}/${action}`, { method: "POST" });
+    if (action === "start" || action === "restart") setConfigurationCollapsed(true);
     notify(t(action === "start" ? "启动请求已完成" : action === "stop" ? "已发送停止命令" : "实例已重启"));
     window.setTimeout(refreshRuntime, 350);
   } catch (error) {
@@ -1666,6 +1717,7 @@ function renderRuntime() {
   byId("stop-button").disabled = !exists || !runtime;
   byId("restart-button").disabled = !exists || !runtime;
   byId("command-input").disabled = !exists || !runtime;
+  renderConfigurationLayout();
 }
 
 function runtimeFor(id) {
@@ -1681,6 +1733,7 @@ function connectEvents() {
       if (message.type === "log" && message.instanceId === state.selectedId) appendLog(message);
       if (message.type === "state") {
         if (message.instanceId === state.selectedId) appendLog({ stream: "launcher", line: `[launcher] ${message.message}`, timestamp: message.timestamp });
+        if (message.instanceId === state.selectedId && message.running) setConfigurationCollapsed(true);
         refreshRuntime();
       }
     } catch (error) {
