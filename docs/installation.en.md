@@ -96,6 +96,11 @@ sudo systemctl status xinbot-box-manager
 sudo journalctl -u xinbot-box-manager -f
 ```
 
+Automatic startup can be enabled separately for each instance. It takes effect whenever the Box
+Manager service starts, including device boot and service restarts. A failed instance does not
+prevent the manager or other instances from starting; its error is shown in that instance's console
+and written to the service log. Stopping the service stops all instances managed by it.
+
 Uninstalling or purging the package does not automatically remove
 `/var/lib/xinbot-box-manager`, preventing accidental deletion of instances, passwords, and
 configuration.
@@ -119,6 +124,7 @@ required.
 /var/lib/xinbot-box-manager/
 ├── auth.json          # Administrator password hash
 ├── settings.json      # Java, Core, and resource settings
+├── resources/         # Core, trusted catalog, and installed plugins
 ├── profiles/          # Instance profiles
 ├── instances/         # Instance working directories, configuration, and plugin settings
 ├── trash/             # Recoverably deleted instances
@@ -129,6 +135,20 @@ Minecraft secondary-login passwords and proxy credentials must be stored unencry
 instance configuration for unattended startup. Keep the data directory accessible only to the
 dedicated system user. An instance proxy applies only to XinBot Core's Minecraft server connection,
 not the web manager, Java downloads, or Microsoft authentication.
+
+## Plugin downloads
+
+The plugin manager can download catalog entries that provide a pinned HTTPS URL and SHA-256. A
+download is written to a temporary file in the resource directory and replaces the installed file
+only after size, JAR-format, and SHA-256 checks pass. Missing declared dependencies are downloaded
+first. Entries without trusted download metadata must still be placed in the resource directory by
+the Linux administrator.
+
+Downloads are made by the Box Manager host, not by the browser. A separate HTTP, SOCKS4, or SOCKS5
+plugin-download proxy can be configured in System settings. When it is disabled, standard service
+environment variables such as `HTTPS_PROXY` are used. Per-instance Minecraft proxies do not apply
+to plugin downloads. Proxy credentials are stored unencrypted in the permission-restricted local
+settings file.
 
 ## Network security
 

@@ -108,7 +108,7 @@
                 </select>
               </div>
             </div>
-            <p class="library-note">当前版本从插件资源目录读取目录清单和 JAR。导入、下载与升级仍通过 Linux 文件系统完成。</p>
+            <p class="library-note">可信目录中的插件可直接下载并校验；未列入可信目录的插件仍通过 Linux 文件系统导入。</p>
             <div id="plugin-library-list" class="plugin-library-list"></div>
           </section>
         </section>
@@ -127,8 +127,6 @@
               <h1 id="editor-title">新实例</h1>
               <p id="editor-subtitle" class="muted">尚未保存</p>
               <div id="configuration-summary" class="configuration-summary hidden">
-                <span><b>连接</b><strong id="summary-connection">—</strong></span>
-                <span><b>账号</b><strong id="summary-account">—</strong></span>
                 <span><b>Meta</b><strong id="summary-meta">—</strong></span>
                 <span><b>插件</b><strong id="summary-plugins">—</strong></span>
                 <button id="edit-config-button" class="ghost" type="button">修改配置</button>
@@ -238,6 +236,10 @@
                 <div class="subsection">
                   <div class="subsection-title"><h3>运行参数</h3><span>单实例 JVM 内存限制</span></div>
                   <div class="form-grid two">
+                    <label class="span-two toggle-row">
+                      <span><strong>设备启动后自动运行</strong><small>Box Manager 服务启动时自动启动此实例</small></span>
+                      <input id="instance-auto-start" type="checkbox" />
+                    </label>
                     <label>
                       JVM 初始堆（MB）
                       <input id="instance-xms" type="number" min="16" max="1024" value="32" required />
@@ -296,12 +298,46 @@
     </div>
 
     <dialog id="settings-dialog">
-      <form id="settings-form" class="dialog-card">
+      <form id="settings-form" class="dialog-card settings-dialog-card">
         <div class="dialog-heading"><div><p class="eyebrow">SYSTEM</p><h2>运行环境</h2></div><button class="dialog-close icon-button" type="button">×</button></div>
         <p class="muted">路径保存在本机。管理端不会从网页自动下载 Java 或 XinBot Core。</p>
         <label>Java 命令或绝对路径<input id="setting-java" required placeholder="java 或 /usr/bin/java" /></label>
         <label>XinBot Core JAR<input id="setting-jar" placeholder="/opt/xinbot/xinbot.jar" /></label>
         <label>插件资源目录<input id="setting-resources" required placeholder="/opt/xinbot-box/resources" /></label>
+        <div class="subsection">
+          <div class="subsection-title"><h3>插件下载代理</h3><span>全局设置</span></div>
+          <div class="form-grid two">
+            <label class="span-two toggle-row">
+              <span><strong>启用插件下载代理</strong><small>支持 HTTP、SOCKS4 和 SOCKS5</small></span>
+              <input id="setting-plugin-proxy-enabled" type="checkbox" />
+            </label>
+            <div id="setting-plugin-proxy-fields" class="form-grid two span-two hidden">
+              <label>
+                代理类型
+                <select id="setting-plugin-proxy-type">
+                  <option value="HTTP">HTTP</option>
+                  <option value="SOCKS5">SOCKS5</option>
+                  <option value="SOCKS4">SOCKS4</option>
+                </select>
+              </label>
+              <label>
+                代理地址
+                <input id="setting-plugin-proxy-address" maxlength="512" placeholder="127.0.0.1:1080" />
+              </label>
+              <div id="setting-plugin-proxy-credentials" class="form-grid two span-two">
+                <label>
+                  代理用户名（可选）
+                  <input id="setting-plugin-proxy-username" maxlength="256" autocomplete="off" />
+                </label>
+                <label>
+                  代理密码（可选）
+                  <input id="setting-plugin-proxy-password" type="password" maxlength="512" autocomplete="off" />
+                </label>
+              </div>
+            </div>
+          </div>
+          <p class="section-help proxy-help">仅用于插件下载和更新。未启用时使用服务环境中的代理设置；凭据保存在本机设置中且不加密。</p>
+        </div>
         <div id="settings-health" class="health-list"></div>
         <p id="settings-error" class="form-error"></p>
         <div class="form-actions"><span class="spacer"></span><button class="primary" type="submit">保存设置</button></div>

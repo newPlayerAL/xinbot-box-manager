@@ -1,15 +1,20 @@
 use std::{
     collections::{HashMap, HashSet},
-    fs,
+    fs::{self, File, OpenOptions},
+    io::{self, Read, Write},
     path::{Path, PathBuf},
+    time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 use crate::models::{GlobalSettings, InstanceProfile};
 
 const PLUGIN: &str = "PLUGIN";
 const META_PLUGIN: &str = "META_PLUGIN";
+const MAX_PLUGIN_BYTES: u64 = 128 * 1024 * 1024;
+const PLUGIN_DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30 * 60);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -39,6 +44,12 @@ pub struct PluginDescriptor {
     pub description_en: String,
     #[serde(default)]
     pub resource: String,
+    #[serde(default, skip_serializing)]
+    pub download_url: String,
+    #[serde(default, skip_serializing)]
+    pub sha256: String,
+    #[serde(default)]
+    pub source_url: String,
     #[serde(default)]
     pub login_mode: String,
     #[serde(default)]
@@ -51,6 +62,10 @@ pub struct PluginDescriptor {
     pub config_files: Vec<PluginConfigFile>,
     #[serde(default)]
     pub available: bool,
+    #[serde(default)]
+    pub downloadable: bool,
+    #[serde(default)]
+    pub verified: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -65,6 +80,12 @@ pub struct PluginConfigDocument {
     pub content: String,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginInstallResult {
+    pub installed: Vec<String>,
+}
+
 fn default_version() -> String {
     "未知版本".to_string()
 }
@@ -74,6 +95,19 @@ fn default_config_format() -> String {
 }
 
 pub fn collect_plugins(settings: &GlobalSettings) -> Result<Vec<PluginDescriptor>, String> {
+    collect_plugins_inner(settings, false)
+}
+
+pub fn collect_plugins_with_status(
+    settings: &GlobalSettings,
+) -> Result<Vec<PluginDescriptor>, String> {
+    collect_plugins_inner(settings, true)
+}
+
+fn collect_plugins_inner(
+    settings: &GlobalSettings,
+    verify_installed: bool,
+) -> Result<Vec<PluginDescriptor>, String> {
     let resource_dir = PathBuf::from(&settings.resource_dir);
     let catalog_path = resource_dir.join("catalog.json");
     let text = fs::read_to_string(&catalog_path)
@@ -82,7 +116,12 @@ pub fn collect_plugins(settings: &GlobalSettings) -> Result<Vec<PluginDescriptor
         serde_json::from_str(&text).map_err(|error| format!("插件目录格式无效：{error}"))?;
     for plugin in &mut plugins {
         normalize(plugin)?;
-        plugin.available = resource_dir.join(&plugin.resource).is_file();
+        let resource = resource_dir.join(&plugin.resource);
+        plugin.available = resource.is_file();
+        plugin.downloadable = !plugin.download_url.is_empty();
+        plugin.verified = plugin.available
+            && plugin.downloadable
+            && (!verify_installed || file_sha256(&resource)? == plugin.sha256);
     }
     plugins.sort_by(|left, right| {
         let left_rank = if left.plugin_type == META_PLUGIN {
@@ -100,6 +139,210 @@ pub fn collect_plugins(settings: &GlobalSettings) -> Result<Vec<PluginDescriptor
             .then_with(|| left.name.to_lowercase().cmp(&right.name.to_lowercase()))
     });
     Ok(plugins)
+}
+
+pub fn install_plugin(
+    plugin_id: &str,
+    settings: &GlobalSettings,
+) -> Result<PluginInstallResult, String> {
+    let catalog = collect_plugins_with_status(settings)?;
+    let mut plan = Vec::new();
+    let mut visiting = HashSet::new();
+    let mut visited = HashSet::new();
+    plan_plugin_install(
+        plugin_id,
+        &catalog,
+        true,
+        &mut visiting,
+        &mut visited,
+        &mut plan,
+    )?;
+
+    let resource_dir = PathBuf::from(&settings.resource_dir);
+    fs::create_dir_all(&resource_dir).map_err(|error| format!("无法创建插件资源目录：{error}"))?;
+    let mut agent_builder = ureq::AgentBuilder::new()
+        .timeout(PLUGIN_DOWNLOAD_TIMEOUT)
+        .timeout_connect(Duration::from_secs(15))
+        .timeout_read(Duration::from_secs(60))
+        .timeout_write(Duration::from_secs(30))
+        .redirects(5)
+        .user_agent(concat!("xinbot-box-manager/", env!("CARGO_PKG_VERSION")));
+    if let Some(proxy) = plugin_download_proxy(settings)? {
+        agent_builder = agent_builder.proxy(proxy);
+    }
+    let agent = agent_builder.build();
+
+    let mut installed = Vec::new();
+    for plugin in plan {
+        download_plugin(&agent, &resource_dir, &plugin)?;
+        installed.push(plugin.id);
+    }
+    Ok(PluginInstallResult { installed })
+}
+
+fn plugin_download_proxy(settings: &GlobalSettings) -> Result<Option<ureq::Proxy>, String> {
+    if !settings.plugin_proxy_enabled {
+        return Ok(None);
+    }
+    let scheme = match settings.plugin_proxy_type.as_str() {
+        "HTTP" => "http",
+        "SOCKS4" => "socks4",
+        "SOCKS5" => "socks5",
+        _ => return Err("插件下载代理类型无效".to_string()),
+    };
+    let credentials = if settings.plugin_proxy_username.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "{}:{}@",
+            settings.plugin_proxy_username, settings.plugin_proxy_password
+        )
+    };
+    let proxy_url = format!("{scheme}://{credentials}{}", settings.plugin_proxy_address);
+    ureq::Proxy::new(proxy_url)
+        .map(Some)
+        .map_err(|_| "插件下载代理配置无效".to_string())
+}
+
+fn plan_plugin_install(
+    plugin_id: &str,
+    catalog: &[PluginDescriptor],
+    force: bool,
+    visiting: &mut HashSet<String>,
+    visited: &mut HashSet<String>,
+    plan: &mut Vec<PluginDescriptor>,
+) -> Result<(), String> {
+    if visited.contains(plugin_id) {
+        return Ok(());
+    }
+    if !visiting.insert(plugin_id.to_string()) {
+        return Err(format!("插件依赖形成循环：{plugin_id}"));
+    }
+    let plugin = catalog
+        .iter()
+        .find(|plugin| plugin.id == plugin_id)
+        .ok_or_else(|| format!("插件目录中不存在：{plugin_id}"))?;
+    for dependency_name in &plugin.dependencies {
+        let dependency = catalog
+            .iter()
+            .find(|candidate| {
+                candidate.id.eq_ignore_ascii_case(dependency_name)
+                    || candidate.name.eq_ignore_ascii_case(dependency_name)
+            })
+            .ok_or_else(|| format!("插件 {} 缺少依赖 {}", plugin.name, dependency_name))?;
+        if !dependency.available || (dependency.downloadable && !dependency.verified) {
+            plan_plugin_install(
+                &dependency.id,
+                catalog,
+                dependency.available,
+                visiting,
+                visited,
+                plan,
+            )?;
+        }
+    }
+    visiting.remove(plugin_id);
+    visited.insert(plugin_id.to_string());
+    if force || !plugin.available {
+        if !plugin.downloadable {
+            return Err(format!("插件 {} 没有可信下载源", plugin.name));
+        }
+        plan.push(plugin.clone());
+    }
+    Ok(())
+}
+
+fn download_plugin(
+    agent: &ureq::Agent,
+    resource_dir: &Path,
+    plugin: &PluginDescriptor,
+) -> Result<(), String> {
+    let response = agent
+        .get(&plugin.download_url)
+        .call()
+        .map_err(|error| format!("下载插件 {} 失败：{error}", plugin.name))?;
+    if !response.get_url().starts_with("https://") {
+        return Err(format!("插件 {} 的下载重定向不是 HTTPS", plugin.name));
+    }
+    if response
+        .header("Content-Length")
+        .and_then(|value| value.parse::<u64>().ok())
+        .is_some_and(|length| length > MAX_PLUGIN_BYTES)
+    {
+        return Err(format!("插件 {} 的下载文件超过 128 MB", plugin.name));
+    }
+
+    let destination = resource_dir.join(&plugin.resource);
+    let temporary = resource_dir.join(format!(
+        ".{}.download-{}-{}",
+        plugin.resource,
+        std::process::id(),
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos()
+    ));
+    let result = (|| {
+        let mut output = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)
+            .map_err(|error| format!("无法创建插件下载暂存文件：{error}"))?;
+        let mut reader = response.into_reader().take(MAX_PLUGIN_BYTES + 1);
+        let downloaded = io::copy(&mut reader, &mut output)
+            .map_err(|error| format!("下载插件 {} 失败：{error}", plugin.name))?;
+        if downloaded > MAX_PLUGIN_BYTES {
+            return Err(format!("插件 {} 的下载文件超过 128 MB", plugin.name));
+        }
+        output
+            .flush()
+            .map_err(|error| format!("无法写入插件下载文件：{error}"))?;
+        output
+            .sync_all()
+            .map_err(|error| format!("无法同步插件下载文件：{error}"))?;
+        drop(output);
+
+        let checksum = file_sha256(&temporary)?;
+        if checksum != plugin.sha256 {
+            return Err(format!(
+                "插件 {} 的 SHA-256 校验失败；文件未安装",
+                plugin.name
+            ));
+        }
+        let mut archive =
+            File::open(&temporary).map_err(|error| format!("无法验证插件下载文件：{error}"))?;
+        let mut magic = [0u8; 4];
+        archive
+            .read_exact(&mut magic)
+            .map_err(|error| format!("插件 {} 不是有效的 JAR：{error}", plugin.name))?;
+        if magic != *b"PK\x03\x04" {
+            return Err(format!("插件 {} 不是有效的 JAR 文件", plugin.name));
+        }
+        fs::rename(&temporary, &destination)
+            .map_err(|error| format!("无法安装插件 {}：{error}", plugin.name))?;
+        Ok(())
+    })();
+    if result.is_err() {
+        let _ = fs::remove_file(&temporary);
+    }
+    result
+}
+
+fn file_sha256(path: &Path) -> Result<String, String> {
+    let mut file = File::open(path)
+        .map_err(|error| format!("无法读取插件文件 {}：{error}", path.display()))?;
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let read = file
+            .read(&mut buffer)
+            .map_err(|error| format!("无法校验插件文件 {}：{error}", path.display()))?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(format!("{:x}", hasher.finalize()))
 }
 
 pub fn validate_server_adapter(
@@ -416,6 +659,9 @@ fn normalize(plugin: &mut PluginDescriptor) -> Result<(), String> {
     plugin.id = plugin.id.trim().to_string();
     plugin.name = plugin.name.trim().to_string();
     plugin.plugin_type = plugin.plugin_type.trim().to_ascii_uppercase();
+    plugin.download_url = plugin.download_url.trim().to_string();
+    plugin.sha256 = plugin.sha256.trim().to_ascii_lowercase();
+    plugin.source_url = plugin.source_url.trim().to_string();
     if plugin.plugin_type != PLUGIN && plugin.plugin_type != META_PLUGIN {
         return Err(format!("插件 {} 的类型无效", plugin.name));
     }
@@ -435,6 +681,29 @@ fn normalize(plugin: &mut PluginDescriptor) -> Result<(), String> {
     {
         return Err(format!("插件 {} 的资源路径无效", plugin.name));
     }
+    if plugin.download_url.is_empty() != plugin.sha256.is_empty() {
+        return Err(format!(
+            "插件 {} 的下载地址和 SHA-256 必须同时提供",
+            plugin.name
+        ));
+    }
+    if !plugin.download_url.is_empty() {
+        if !plugin.download_url.starts_with("https://") {
+            return Err(format!("插件 {} 的下载地址必须使用 HTTPS", plugin.name));
+        }
+        if plugin.sha256.len() != 64
+            || !plugin
+                .sha256
+                .chars()
+                .all(|character| character.is_ascii_hexdigit())
+        {
+            return Err(format!("插件 {} 的 SHA-256 无效", plugin.name));
+        }
+    }
+    if !plugin.source_url.is_empty() && !plugin.source_url.starts_with("https://") {
+        return Err(format!("插件 {} 的源码地址必须使用 HTTPS", plugin.name));
+    }
+    plugin.downloadable = !plugin.download_url.is_empty();
     Ok(())
 }
 
@@ -446,9 +715,55 @@ mod tests {
         let mut plugins: Vec<PluginDescriptor> =
             serde_json::from_str(include_str!("../resources/catalog.json")).unwrap();
         for plugin in &mut plugins {
+            normalize(plugin).unwrap();
             plugin.available = true;
         }
         plugins
+    }
+
+    #[test]
+    fn trusted_downloads_use_https_and_sha256() {
+        let plugins = test_catalog();
+        let downloadable: Vec<_> = plugins
+            .iter()
+            .filter(|plugin| !plugin.download_url.is_empty())
+            .collect();
+        assert_eq!(downloadable.len(), 4);
+        assert!(downloadable
+            .iter()
+            .all(|plugin| plugin.download_url.starts_with("https://")));
+        assert!(downloadable.iter().all(|plugin| plugin.sha256.len() == 64));
+    }
+
+    #[test]
+    fn missing_dependency_is_planned_before_requested_plugin() {
+        let mut plugins = test_catalog();
+        plugins
+            .iter_mut()
+            .find(|plugin| plugin.id == "backtothebase")
+            .unwrap()
+            .available = false;
+        plugins
+            .iter_mut()
+            .find(|plugin| plugin.id == "movementsync")
+            .unwrap()
+            .available = false;
+        let mut plan = Vec::new();
+        plan_plugin_install(
+            "backtothebase",
+            &plugins,
+            true,
+            &mut HashSet::new(),
+            &mut HashSet::new(),
+            &mut plan,
+        )
+        .unwrap();
+        assert_eq!(
+            plan.iter()
+                .map(|plugin| plugin.id.as_str())
+                .collect::<Vec<_>>(),
+            vec!["movementsync", "backtothebase"]
+        );
     }
 
     #[test]
@@ -462,6 +777,7 @@ mod tests {
             username: "bot".into(),
             server_password: String::new(),
             online_mode: false,
+            auto_start: false,
             login_template: String::new(),
             proxy_enabled: false,
             proxy_type: "SOCKS5".into(),
@@ -507,6 +823,7 @@ mod tests {
             username: "bot".into(),
             server_password: String::new(),
             online_mode: false,
+            auto_start: false,
             login_template: String::new(),
             proxy_enabled: false,
             proxy_type: "SOCKS5".into(),
@@ -538,6 +855,7 @@ mod tests {
             username: "bot".into(),
             server_password: String::new(),
             online_mode: false,
+            auto_start: false,
             login_template: String::new(),
             proxy_enabled: false,
             proxy_type: "SOCKS5".into(),

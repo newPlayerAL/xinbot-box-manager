@@ -26,6 +26,12 @@ const EN_TEXT = {
   "目录条目": "Catalog entries",
   "资源已就绪": "Resource ready",
   "资源缺失": "Resource missing",
+  "校验不一致": "Verification mismatch",
+  "下载": "Download",
+  "更新": "Update",
+  "正在下载…": "Downloading…",
+  "没有可信下载源": "No trusted download source",
+  "已安装 {count} 个插件资源": "Installed {count} plugin resources",
   "已被实例使用": "Used by instances",
   "查看设备上的插件资源、依赖关系以及各实例的使用情况。": "View plugin resources, dependencies, and instance usage on this device.",
   "插件目录设置": "Plugin directory settings",
@@ -35,7 +41,7 @@ const EN_TEXT = {
   "全部类型": "All types",
   "Meta 插件": "Meta plugin",
   "普通插件": "Regular plugin",
-  "当前版本从插件资源目录读取目录清单和 JAR。导入、下载与升级仍通过 Linux 文件系统完成。": "This version reads the catalog and JAR files from the plugin resource directory. Importing, downloading, and upgrading are still performed through the Linux file system.",
+  "可信目录中的插件可直接下载并校验；未列入可信目录的插件仍通过 Linux 文件系统导入。": "Plugins in the trusted catalog can be downloaded and verified directly. Plugins outside it must still be imported through the Linux file system.",
   "创建第一个实例": "Create your first instance",
   "添加服务器地址、机器人账号和所需插件，然后从浏览器启动 XinBot。": "Add a server address, bot account, and required plugins, then start XinBot from your browser.",
   "连接与运行": "Connection and runtime",
@@ -72,6 +78,8 @@ const EN_TEXT = {
   "仅代理 XinBot Core 到 Minecraft 服务器的连接；Java 下载、网页与 Microsoft 登录不使用此设置。代理凭据保存在本机实例配置中，且不加密。": "Only the connection from XinBot Core to the Minecraft server uses this proxy. Java downloads, web access, and Microsoft authentication do not. Proxy credentials are stored unencrypted in the local instance configuration.",
   "运行参数": "Runtime options",
   "单实例 JVM 内存限制": "Per-instance JVM memory limits",
+  "设备启动后自动运行": "Run automatically after device startup",
+  "Box Manager 服务启动时自动启动此实例": "Start this instance automatically when the Box Manager service starts",
   "JVM 初始堆（MB）": "Initial JVM heap (MB)",
   "JVM 最大堆（MB）": "Maximum JVM heap (MB)",
   "依赖会自动加入": "Dependencies are added automatically",
@@ -97,6 +105,10 @@ const EN_TEXT = {
   "Java 命令或绝对路径": "Java command or absolute path",
   "java 或 /usr/bin/java": "java or /usr/bin/java",
   "插件资源目录": "Plugin resource directory",
+  "插件下载代理": "Plugin download proxy",
+  "全局设置": "Global setting",
+  "启用插件下载代理": "Enable plugin download proxy",
+  "仅用于插件下载和更新。未启用时使用服务环境中的代理设置；凭据保存在本机设置中且不加密。": "Used only for plugin downloads and updates. When disabled, the service environment proxy is used. Credentials are stored unencrypted in local settings.",
   "保存设置": "Save settings",
   "修改管理员账号": "Change administrator account",
   "当前密码": "Current password",
@@ -265,6 +277,16 @@ const EN_TEXT = {
   "代理密码不能超过 512 个字符": "The proxy password cannot exceed 512 characters",
   "代理类型只能是 HTTP、SOCKS4 或 SOCKS5": "The proxy type must be HTTP, SOCKS4, or SOCKS5",
   "代理地址应使用“主机:端口”格式，例如 127.0.0.1:1080": "Use host:port format for the proxy address, for example 127.0.0.1:1080",
+  "插件下载代理用户名不能超过 256 个字符": "The plugin download proxy username cannot exceed 256 characters",
+  "插件下载代理地址不能超过 512 个字符": "The plugin download proxy address cannot exceed 512 characters",
+  "插件下载代理密码不能超过 512 个字符": "The plugin download proxy password cannot exceed 512 characters",
+  "插件下载代理类型只能是 HTTP、SOCKS4 或 SOCKS5": "The plugin download proxy type must be HTTP, SOCKS4, or SOCKS5",
+  "插件下载代理地址应使用“主机:端口”格式，例如 127.0.0.1:1080": "Use host:port format for the plugin download proxy address, for example 127.0.0.1:1080",
+  "SOCKS4 插件下载代理不支持用户名和密码": "SOCKS4 plugin download proxies do not support a username or password",
+  "插件下载代理用户名和密码必须同时填写": "The plugin download proxy username and password must both be provided",
+  "插件下载代理用户名不能包含冒号": "The plugin download proxy username cannot contain a colon",
+  "插件下载代理类型无效": "The plugin download proxy type is invalid",
+  "插件下载代理配置无效": "The plugin download proxy configuration is invalid",
   "该实例正在启动或已经运行": "This instance is starting or already running",
   "实例尚未运行": "The instance is not running",
   "实例不存在": "The instance does not exist",
@@ -350,6 +372,7 @@ const state = {
   activeView: "instances",
   configurationCollapsed: false,
   logRequestToken: 0,
+  installingPluginId: null,
 };
 
 const ui = {
@@ -555,6 +578,8 @@ function bindEvents() {
   byId("account-button").addEventListener("click", openAccount);
   byId("logout-button").addEventListener("click", logout);
   byId("settings-form").addEventListener("submit", saveSettings);
+  byId("setting-plugin-proxy-enabled").addEventListener("change", renderPluginProxySettings);
+  byId("setting-plugin-proxy-type").addEventListener("change", renderPluginProxySettings);
   byId("account-form").addEventListener("submit", changeAccount);
   byId("plugin-config-form").addEventListener("submit", savePluginConfig);
   byId("plugin-config-structured-button").addEventListener("click", () => switchPluginConfigMode("structured"));
@@ -602,6 +627,7 @@ function emptyDraft() {
     username: "",
     serverPassword: "",
     onlineMode: false,
+    autoStart: false,
     loginTemplate: "/login {password}",
     proxyEnabled: false,
     proxyType: "SOCKS5",
@@ -773,7 +799,8 @@ function renderPluginManager() {
 
   for (const plugin of plugins) {
     const card = document.createElement("article");
-    card.className = `plugin-library-card${plugin.available ? "" : " unavailable"}`;
+    const verificationMismatch = plugin.available && plugin.downloadable && !plugin.verified;
+    card.className = `plugin-library-card${plugin.available ? "" : " unavailable"}${verificationMismatch ? " unverified" : ""}`;
 
     const badge = document.createElement("span");
     badge.className = `plugin-type-badge ${plugin.pluginType === "META_PLUGIN" ? "meta" : "regular"}`;
@@ -810,8 +837,10 @@ function renderPluginManager() {
     const side = document.createElement("div");
     side.className = "plugin-library-status";
     const status = document.createElement("strong");
-    status.className = plugin.available ? "health-ok" : "health-bad";
-    status.textContent = plugin.available ? t("资源已就绪") : t("JAR 缺失");
+    status.className = plugin.available && !verificationMismatch ? "health-ok" : "health-bad";
+    status.textContent = verificationMismatch
+      ? t("校验不一致")
+      : plugin.available ? t("资源已就绪") : t("JAR 缺失");
     const usage = pluginUsage(plugin);
     const usageText = document.createElement("small");
     usageText.textContent = usage.length
@@ -820,8 +849,47 @@ function renderPluginManager() {
         : `${usage.length} 个实例：${localizedList(usage.map((profile) => profile.name))}`
       : t("尚未被实例使用");
     side.append(status, usageText);
+    if (plugin.downloadable && (!plugin.available || !plugin.verified)) {
+      const installButton = document.createElement("button");
+      installButton.type = "button";
+      installButton.className = "plugin-install-button";
+      installButton.disabled = Boolean(state.installingPluginId);
+      installButton.textContent = state.installingPluginId === plugin.id
+        ? t("正在下载…")
+        : t(plugin.available ? "更新" : "下载");
+      installButton.addEventListener("click", () => installTrustedPlugin(plugin));
+      side.append(installButton);
+    } else if (!plugin.available) {
+      const unavailable = document.createElement("small");
+      unavailable.textContent = t("没有可信下载源");
+      side.append(unavailable);
+    }
     card.append(badge, body, side);
     list.append(card);
+  }
+}
+
+async function installTrustedPlugin(plugin) {
+  if (state.installingPluginId) return;
+  state.installingPluginId = plugin.id;
+  renderPluginManager();
+  try {
+    const result = await api(`/api/plugins/${encodeURIComponent(plugin.id)}/install`, {
+      method: "POST",
+    });
+    state.plugins = await api("/api/plugins");
+    renderList();
+    if (state.draft) {
+      renderPlugins(state.draft);
+      renderLoginBehavior();
+      renderRuntime();
+    }
+    notify(t("已安装 {count} 个插件资源", { count: result.installed.length }));
+  } catch (error) {
+    notify(error.message, true);
+  } finally {
+    state.installingPluginId = null;
+    if (state.activeView === "plugins") renderPluginManager();
   }
 }
 
@@ -839,6 +907,7 @@ function renderEditor() {
   byId("instance-username").value = profile.username;
   byId("instance-password").value = profile.serverPassword || "";
   byId("instance-online").checked = profile.onlineMode;
+  byId("instance-auto-start").checked = Boolean(profile.autoStart);
   byId("instance-login-template").value = profile.loginTemplate || "";
   byId("instance-proxy-enabled").checked = Boolean(profile.proxyEnabled);
   byId("instance-proxy-type").value = ["HTTP", "SOCKS4", "SOCKS5"].includes(profile.proxyType)
@@ -888,12 +957,8 @@ function renderConfigurationLayout() {
 function renderConfigurationSummary() {
   if (!state.draft) return;
   const host = byId("instance-host").value.trim();
-  const port = byId("instance-port").value.trim();
-  const username = byId("instance-username").value.trim();
   const meta = serverAdapterForHost(host).plugin || selectedMetaPlugin();
   const enabledPlugins = document.querySelectorAll('input[name="ordinary-plugin"]:checked').length;
-  byId("summary-connection").textContent = host ? `${host}${port ? `:${port}` : ""}` : t("未设置服务器");
-  byId("summary-account").textContent = username || t("未设置账号");
   byId("summary-meta").textContent = meta ? localizedPluginName(meta) : t("未选择");
   byId("summary-plugins").textContent = currentLanguage === "en"
     ? `${enabledPlugins} enabled`
@@ -1590,6 +1655,7 @@ function collectForm() {
     username: byId("instance-username").value.trim(),
     serverPassword: byId("instance-password").value,
     onlineMode: byId("instance-online").checked,
+    autoStart: byId("instance-auto-start").checked,
     loginTemplate: byId("instance-login-template").value.trim(),
     proxyEnabled: byId("instance-proxy-enabled").checked,
     proxyType: byId("instance-proxy-type").value,
@@ -1765,9 +1831,25 @@ function openSettings() {
   byId("setting-java").value = state.settings.javaPath;
   byId("setting-jar").value = state.settings.xinbotJar;
   byId("setting-resources").value = state.settings.resourceDir;
+  byId("setting-plugin-proxy-enabled").checked = Boolean(state.settings.pluginProxyEnabled);
+  byId("setting-plugin-proxy-type").value = ["HTTP", "SOCKS4", "SOCKS5"].includes(state.settings.pluginProxyType)
+    ? state.settings.pluginProxyType
+    : "HTTP";
+  byId("setting-plugin-proxy-address").value = state.settings.pluginProxyAddress || "";
+  byId("setting-plugin-proxy-username").value = state.settings.pluginProxyUsername || "";
+  byId("setting-plugin-proxy-password").value = state.settings.pluginProxyPassword || "";
   byId("settings-error").textContent = "";
+  renderPluginProxySettings();
   renderSettingsHealth();
   ui.settingsDialog.showModal();
+}
+
+function renderPluginProxySettings() {
+  const enabled = byId("setting-plugin-proxy-enabled").checked;
+  const proxyType = byId("setting-plugin-proxy-type").value;
+  byId("setting-plugin-proxy-fields").classList.toggle("hidden", !enabled);
+  byId("setting-plugin-proxy-credentials").classList.toggle("hidden", proxyType === "SOCKS4");
+  byId("setting-plugin-proxy-address").required = enabled;
 }
 
 function renderSettingsHealth() {
@@ -1790,12 +1872,18 @@ async function saveSettings(event) {
   event.preventDefault();
   byId("settings-error").textContent = "";
   try {
+    const pluginProxyType = byId("setting-plugin-proxy-type").value;
     state.settings = await api("/api/settings", {
       method: "PUT",
       body: {
         javaPath: byId("setting-java").value.trim(),
         xinbotJar: byId("setting-jar").value.trim(),
         resourceDir: byId("setting-resources").value.trim(),
+        pluginProxyEnabled: byId("setting-plugin-proxy-enabled").checked,
+        pluginProxyType,
+        pluginProxyAddress: byId("setting-plugin-proxy-address").value.trim(),
+        pluginProxyUsername: pluginProxyType === "SOCKS4" ? "" : byId("setting-plugin-proxy-username").value.trim(),
+        pluginProxyPassword: pluginProxyType === "SOCKS4" ? "" : byId("setting-plugin-proxy-password").value,
       },
     });
     try {

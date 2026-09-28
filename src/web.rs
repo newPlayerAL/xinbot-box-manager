@@ -1,4 +1,10 @@
-use std::{convert::Infallible, net::SocketAddr, path::Path as FsPath, time::Duration};
+use std::{
+    convert::Infallible,
+    net::SocketAddr,
+    path::Path as FsPath,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use axum::{
     extract::{ConnectInfo, DefaultBodyLimit, Path, State},
@@ -33,6 +39,8 @@ pub struct AppState {
     pub store: Store,
     pub auth: AuthService,
     pub processes: ProcessManager,
+    pub plugin_install_lock: Arc<Mutex<()>>,
+    pub shutdown: tokio::sync::watch::Receiver<bool>,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -47,6 +55,7 @@ pub fn router(state: AppState) -> Router {
         .route("/api/auth/change-password", post(auth_change_password))
         .route("/api/settings", get(get_settings).put(update_settings))
         .route("/api/plugins", get(list_plugins))
+        .route("/api/plugins/:id/install", post(install_plugin))
         .route("/api/instances", get(list_instances).post(create_instance))
         .route(
             "/api/instances/:id",
@@ -257,8 +266,30 @@ async fn list_plugins(
 ) -> ApiResult<Json<Vec<plugins::PluginDescriptor>>> {
     require_auth(&state, &headers)?;
     let settings = state.store.load_settings().map_err(ApiError::internal)?;
-    let plugins = plugins::collect_plugins(&settings).map_err(ApiError::bad_request)?;
+    let plugins = plugins::collect_plugins_with_status(&settings).map_err(ApiError::bad_request)?;
     Ok(Json(plugins))
+}
+
+async fn install_plugin(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    headers: HeaderMap,
+) -> ApiResult<Json<plugins::PluginInstallResult>> {
+    require_csrf(&headers)?;
+    require_auth(&state, &headers)?;
+    let settings = state.store.load_settings().map_err(ApiError::internal)?;
+    let install_lock = Arc::clone(&state.plugin_install_lock);
+    let result = tokio::task::spawn_blocking(move || {
+        let _guard = install_lock
+            .lock()
+            .map_err(|_| "插件下载锁已损坏".to_string())?;
+        plugins::install_plugin(&id, &settings)
+    })
+    .await;
+    let installed = result
+        .map_err(|_| ApiError::internal("插件下载任务异常结束"))?
+        .map_err(ApiError::bad_request)?;
+    Ok(Json(installed))
 }
 
 async fn list_instances(
@@ -478,6 +509,17 @@ async fn events(
 ) -> ApiResult<Sse<impl futures_util::Stream<Item = Result<Event, Infallible>>>> {
     require_auth(&state, &headers)?;
     let receiver = state.processes.subscribe();
+    let mut shutdown = state.shutdown.clone();
+    let shutdown_signal = async move {
+        if *shutdown.borrow() {
+            return;
+        }
+        while shutdown.changed().await.is_ok() {
+            if *shutdown.borrow() {
+                return;
+            }
+        }
+    };
     let stream = BroadcastStream::new(receiver).filter_map(|message| async move {
         match message {
             Ok(message) => Some(Ok(Event::default()
@@ -486,6 +528,7 @@ async fn events(
             Err(_) => None,
         }
     });
+    let stream = stream.take_until(shutdown_signal);
     Ok(Sse::new(stream).keep_alive(
         KeepAlive::new()
             .interval(Duration::from_secs(15))

@@ -226,6 +226,7 @@ mod tests {
             username: "Bot".to_string(),
             server_password: String::new(),
             online_mode: false,
+            auto_start: false,
             login_template: "/login {password}".to_string(),
             proxy_enabled: false,
             proxy_type: "SOCKS5".to_string(),

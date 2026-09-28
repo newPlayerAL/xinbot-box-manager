@@ -23,6 +23,10 @@ fn default_proxy_type() -> String {
     "SOCKS5".to_string()
 }
 
+fn default_plugin_proxy_type() -> String {
+    "HTTP".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstanceProfile {
@@ -37,6 +41,8 @@ pub struct InstanceProfile {
     pub server_password: String,
     #[serde(default)]
     pub online_mode: bool,
+    #[serde(default)]
+    pub auto_start: bool,
     #[serde(default = "default_login_template")]
     pub login_template: String,
     #[serde(default)]
@@ -175,6 +181,16 @@ pub struct GlobalSettings {
     pub java_path: String,
     pub xinbot_jar: String,
     pub resource_dir: String,
+    #[serde(default)]
+    pub plugin_proxy_enabled: bool,
+    #[serde(default = "default_plugin_proxy_type")]
+    pub plugin_proxy_type: String,
+    #[serde(default)]
+    pub plugin_proxy_address: String,
+    #[serde(default)]
+    pub plugin_proxy_username: String,
+    #[serde(default)]
+    pub plugin_proxy_password: String,
 }
 
 impl GlobalSettings {
@@ -188,6 +204,11 @@ impl GlobalSettings {
                 String::new()
             },
             resource_dir,
+            plugin_proxy_enabled: false,
+            plugin_proxy_type: default_plugin_proxy_type(),
+            plugin_proxy_address: String::new(),
+            plugin_proxy_username: String::new(),
+            plugin_proxy_password: String::new(),
         }
     }
 
@@ -195,6 +216,9 @@ impl GlobalSettings {
         self.java_path = self.java_path.trim().to_string();
         self.xinbot_jar = self.xinbot_jar.trim().to_string();
         self.resource_dir = self.resource_dir.trim().to_string();
+        self.plugin_proxy_type = self.plugin_proxy_type.trim().to_ascii_uppercase();
+        self.plugin_proxy_address = self.plugin_proxy_address.trim().to_string();
+        self.plugin_proxy_username = self.plugin_proxy_username.trim().to_string();
         if self.java_path.is_empty() {
             return Err("Java 命令或路径不能为空".to_string());
         }
@@ -203,6 +227,42 @@ impl GlobalSettings {
             || self.resource_dir.contains('\0')
         {
             return Err("路径中包含无效字符".to_string());
+        }
+        if self.plugin_proxy_username.chars().count() > 256 {
+            return Err("插件下载代理用户名不能超过 256 个字符".to_string());
+        }
+        if self.plugin_proxy_address.chars().count() > 512 {
+            return Err("插件下载代理地址不能超过 512 个字符".to_string());
+        }
+        if self.plugin_proxy_password.chars().count() > 512 {
+            return Err("插件下载代理密码不能超过 512 个字符".to_string());
+        }
+        if self.plugin_proxy_enabled {
+            if !matches!(
+                self.plugin_proxy_type.as_str(),
+                "HTTP" | "SOCKS4" | "SOCKS5"
+            ) {
+                return Err("插件下载代理类型只能是 HTTP、SOCKS4 或 SOCKS5".to_string());
+            }
+            if !valid_proxy_address(&self.plugin_proxy_address)
+                || self.plugin_proxy_address.starts_with('[')
+            {
+                return Err(
+                    "插件下载代理地址应使用“主机:端口”格式，例如 127.0.0.1:1080".to_string()
+                );
+            }
+            if self.plugin_proxy_type == "SOCKS4"
+                && (!self.plugin_proxy_username.is_empty()
+                    || !self.plugin_proxy_password.is_empty())
+            {
+                return Err("SOCKS4 插件下载代理不支持用户名和密码".to_string());
+            }
+            if self.plugin_proxy_username.is_empty() != self.plugin_proxy_password.is_empty() {
+                return Err("插件下载代理用户名和密码必须同时填写".to_string());
+            }
+            if self.plugin_proxy_username.contains(':') {
+                return Err("插件下载代理用户名不能包含冒号".to_string());
+            }
         }
         Ok(())
     }
@@ -230,7 +290,7 @@ pub struct RuntimeStatus {
 
 #[cfg(test)]
 mod tests {
-    use super::{valid_proxy_address, InstanceProfile};
+    use super::{valid_proxy_address, GlobalSettings, InstanceProfile};
 
     #[test]
     fn validates_proxy_host_and_port() {
@@ -253,7 +313,37 @@ mod tests {
         .unwrap();
         profile.normalize_and_validate().unwrap();
         assert!(!profile.proxy_enabled);
+        assert!(!profile.auto_start);
         assert_eq!(profile.proxy_type, "SOCKS5");
         assert!(profile.proxy_address.is_empty());
+    }
+
+    #[test]
+    fn legacy_settings_default_to_environment_proxy_behavior() {
+        let settings: GlobalSettings = serde_json::from_value(serde_json::json!({
+            "javaPath": "java",
+            "xinbotJar": "/opt/xinbot.jar",
+            "resourceDir": "/opt/xinbot/resources"
+        }))
+        .unwrap();
+        assert!(!settings.plugin_proxy_enabled);
+        assert_eq!(settings.plugin_proxy_type, "HTTP");
+        assert!(settings.plugin_proxy_address.is_empty());
+    }
+
+    #[test]
+    fn validates_plugin_download_proxy() {
+        let mut settings = GlobalSettings::with_resource_dir("/opt/xinbot/resources".to_string());
+        settings.plugin_proxy_enabled = true;
+        settings.plugin_proxy_type = "socks5".to_string();
+        settings.plugin_proxy_address = " proxy.example.org:1080 ".to_string();
+        settings.plugin_proxy_username = " bot ".to_string();
+        settings.plugin_proxy_password = "secret".to_string();
+        settings.normalize_and_validate().unwrap();
+        assert_eq!(settings.plugin_proxy_type, "SOCKS5");
+        assert_eq!(settings.plugin_proxy_address, "proxy.example.org:1080");
+
+        settings.plugin_proxy_password.clear();
+        assert!(settings.normalize_and_validate().is_err());
     }
 }

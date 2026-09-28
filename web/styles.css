@@ -182,6 +182,7 @@ button:disabled { opacity: .38; cursor: not-allowed; }
 .plugin-library-list { display: grid; gap: .65rem; }
 .plugin-library-card { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(160px, 240px); align-items: start; gap: .85rem; padding: .9rem; background: var(--input); border: 1px solid var(--line); border-radius: 11px; }
 .plugin-library-card.unavailable { border-color: color-mix(in srgb, var(--warning) 40%, var(--line)); }
+.plugin-library-card.unverified { border-color: color-mix(in srgb, var(--warning) 55%, var(--line)); }
 .plugin-type-badge { padding: .28rem .4rem; border-radius: 6px; font-size: .6rem; font-weight: 850; letter-spacing: .06em; }
 .plugin-type-badge.meta { color: var(--accent); background: var(--accent-soft); }
 .plugin-type-badge.regular { color: var(--plugin-button-text); background: var(--surface-3); }
@@ -193,14 +194,16 @@ button:disabled { opacity: .38; cursor: not-allowed; }
 .plugin-library-status { text-align: right; }
 .plugin-library-status strong, .plugin-library-status small { display: block; }
 .plugin-library-status small { margin-top: .35rem; color: var(--muted); font-size: .67rem; line-height: 1.4; }
+.plugin-install-button { min-height: 31px; margin-top: .65rem; padding: .4rem .75rem; color: var(--primary-ink); background: var(--accent); font-size: .72rem; }
+.plugin-install-button:hover:not(:disabled) { background: var(--accent-hover); }
 .plugin-library-empty { margin: 1rem; color: var(--muted); text-align: center; }
 .empty-state { height: calc(100vh - 120px); display: grid; place-items: center; align-content: center; text-align: center; }
 .empty-state p { max-width: 460px; color: var(--muted); }
 .empty-icon { display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 1rem; color: var(--accent); background: var(--accent-soft); border: 1px solid rgba(88, 213, 176, .25); border-radius: 18px; font-size: 2rem; }
 .editor { max-width: 1420px; margin: auto; }
-.hero-panel { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; padding: .7rem .2rem; }
+.hero-panel { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; padding: .7rem .2rem; }
 .hero-copy { min-width: 0; flex: 1; }
-.runtime-card { display: flex; align-items: center; gap: .75rem; min-width: 190px; padding: .75rem .9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.runtime-card { display: flex; align-items: center; align-self: flex-start; gap: .75rem; min-width: 190px; padding: .75rem .9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
 .runtime-card strong, .runtime-card small { display: block; }
 .runtime-card small { margin-top: .2rem; color: var(--muted); font-size: .72rem; }
 .workspace-grid { display: grid; grid-template-columns: minmax(480px, 1.08fr) minmax(420px, .92fr); gap: 1rem; align-items: start; }
@@ -281,6 +284,7 @@ button:disabled { opacity: .38; cursor: not-allowed; }
 dialog { width: min(600px, calc(100% - 2rem)); padding: 0; color: var(--text); background: transparent; border: 0; }
 dialog::backdrop { background: var(--dialog-backdrop); backdrop-filter: blur(4px); }
 .dialog-card { display: grid; gap: .9rem; padding: 1.35rem; background: var(--surface); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
+.settings-dialog-card { max-height: calc(100vh - 2rem); overflow: auto; }
 .wide-dialog { width: min(960px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; }
 .config-mode-tabs { display: flex; gap: .35rem; padding: .3rem; background: var(--input); border: 1px solid var(--line); border-radius: 10px; }
 .config-mode-tabs button { flex: 1; min-height: 34px; color: var(--muted); background: transparent; }

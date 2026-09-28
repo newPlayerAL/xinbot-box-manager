@@ -92,6 +92,10 @@ sudo systemctl status xinbot-box-manager
 sudo journalctl -u xinbot-box-manager -f
 ```
 
+实例页可以分别启用“设备启动后自动运行”。该选项会在 Box Manager 服务启动时生效，包括设备
+开机和服务重启；某个实例启动失败不会阻止管理端或其他实例启动，错误会显示在该实例控制台并写入
+服务日志。服务停止时会停止所有由它管理的实例。
+
 卸载或清除软件包不会自动删除 `/var/lib/xinbot-box-manager`，以免误删实例、密码和配置。
 
 ## 遗忘管理员密码
@@ -112,6 +116,7 @@ sudo /usr/bin/xinbot-box-manager admin reset-password \
 /var/lib/xinbot-box-manager/
 ├── auth.json          # 管理员密码哈希
 ├── settings.json      # Java、Core 和资源设置
+├── resources/         # Core、可信目录和已安装插件
 ├── profiles/          # 实例资料
 ├── instances/         # 实例工作目录、配置和插件配置
 ├── trash/             # 可恢复删除的实例
@@ -121,6 +126,17 @@ sudo /usr/bin/xinbot-box-manager admin reset-password \
 Minecraft 二级登录密码和代理凭据需要保存在本机实例配置中才能无人值守启动，并且不加密。
 请保持数据目录仅由专用系统用户访问。实例中的代理设置只作用于 XinBot Core 到 Minecraft
 服务器的连接，不作用于网页管理端、Java 下载或 Microsoft 账号认证。
+
+## 插件下载
+
+插件管理页可以下载可信目录中提供了固定 HTTPS 地址和 SHA-256 的插件。下载先写入资源目录的
+临时文件，完成大小、JAR 格式和 SHA-256 校验后才会替换正式文件；缺失的已声明依赖会先自动
+下载。没有可信下载信息的目录条目仍需由 Linux 管理员手动放入资源目录。
+
+下载由 Box Manager 所在主机发起，而不是浏览器。可以在“系统设置”中单独配置插件下载代理，
+支持 HTTP、SOCKS4 和 SOCKS5；未启用时会读取服务环境中的 `HTTPS_PROXY` 等标准代理变量。
+实例设置中的 Minecraft 代理不作用于插件下载。插件下载代理凭据保存在权限受限的本机设置文件中，
+但内容不加密。
 
 ## 网络安全
 

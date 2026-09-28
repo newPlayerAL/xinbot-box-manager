@@ -11,6 +11,7 @@ use std::{
     io::{self, Write},
     net::SocketAddr,
     path::{Path, PathBuf},
+    sync::{Arc, Mutex},
 };
 
 use auth::{unix_timestamp, AuthService};
@@ -51,10 +52,13 @@ async fn run() -> Result<(), String> {
     let store = Store::new(options.data_dir.clone(), options.resource_dir.clone())?;
     let auth = AuthService::load(store.auth_path(), options.secure_cookie)?;
     let processes = ProcessManager::new(store.clone());
+    let (shutdown_sender, shutdown_receiver) = tokio::sync::watch::channel(false);
     let app = web::router(AppState {
-        store,
+        store: store.clone(),
         auth,
         processes: processes.clone(),
+        plugin_install_lock: Arc::new(Mutex::new(())),
+        shutdown: shutdown_receiver,
     });
     let listener = tokio::net::TcpListener::bind(options.bind)
         .await
@@ -67,17 +71,79 @@ async fn run() -> Result<(), String> {
         println!("提示：服务正在监听所有网卡，请在首次打开后立即设置管理员账号。");
     }
 
+    let auto_start_store = store.clone();
+    let auto_start_processes = processes.clone();
+    if tokio::task::spawn_blocking(move || {
+        auto_start_instances(&auto_start_store, &auto_start_processes)
+    })
+    .await
+    .is_err()
+    {
+        eprintln!("自动启动实例任务异常结束");
+    }
+
+    let shutdown_processes = processes.clone();
+    let graceful_shutdown = async move {
+        shutdown_signal().await;
+        println!("正在停止 XinBot 实例……");
+        let _ = shutdown_sender.send(true);
+        if tokio::task::spawn_blocking(move || shutdown_processes.shutdown_all())
+            .await
+            .is_err()
+        {
+            eprintln!("停止实例任务异常结束");
+        }
+    };
     let result = axum::serve(
         listener,
         app.into_make_service_with_connect_info::<SocketAddr>(),
     )
-    .with_graceful_shutdown(shutdown_signal())
+    .with_graceful_shutdown(graceful_shutdown)
     .await;
-    println!("正在停止 XinBot 实例……");
     tokio::task::spawn_blocking(move || processes.shutdown_all())
         .await
         .map_err(|_| "停止实例任务异常结束".to_string())?;
     result.map_err(|error| format!("Web 服务异常退出：{error}"))
+}
+
+fn auto_start_instances(store: &Store, processes: &ProcessManager) {
+    let profiles = match store.list_instances() {
+        Ok(profiles) => profiles
+            .into_iter()
+            .filter(|profile| profile.auto_start)
+            .collect::<Vec<_>>(),
+        Err(error) => {
+            eprintln!("无法读取自动启动实例：{error}");
+            return;
+        }
+    };
+    if profiles.is_empty() {
+        return;
+    }
+    let settings = match store.load_settings() {
+        Ok(settings) => settings,
+        Err(error) => {
+            eprintln!("无法读取自动启动所需的全局设置：{error}");
+            for profile in profiles {
+                processes.record_launcher_error(
+                    &profile.id,
+                    format!("自动启动失败：无法读取全局设置：{error}"),
+                );
+            }
+            return;
+        }
+    };
+    for profile in profiles {
+        let id = profile.id.clone();
+        let name = profile.name.clone();
+        match processes.start(profile, settings.clone()) {
+            Ok(()) => println!("已自动启动实例：{name}"),
+            Err(error) => {
+                eprintln!("自动启动实例 {name} 失败：{error}");
+                processes.record_launcher_error(&id, format!("自动启动失败：{error}"));
+            }
+        }
+    }
 }
 
 fn run_admin(args: &[String]) -> Result<(), String> {

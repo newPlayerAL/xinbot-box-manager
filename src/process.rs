@@ -106,6 +106,10 @@ impl ProcessManager {
             .unwrap_or_default()
     }
 
+    pub fn record_launcher_error(&self, id: &str, message: String) {
+        self.push_log(id, "stderr", format!("[launcher] {message}"));
+    }
+
     pub fn is_running(&self, id: &str) -> bool {
         self.inner
             .processes
@@ -615,6 +619,7 @@ mod tests {
             username: "bot".into(),
             server_password: "secret".into(),
             online_mode: false,
+            auto_start: false,
             login_template: "/login {password}".into(),
             proxy_enabled: true,
             proxy_type: "SOCKS5".into(),
