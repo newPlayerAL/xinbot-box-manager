@@ -5,7 +5,7 @@
 面向无头 Linux 主机的轻量 XinBot 网页管理端。通过一个浏览器入口管理多个相互隔离的
 XinBot 实例，适合 BTTB、消息响应等常驻场景。
 
-当前版本：`0.1.1`
+当前版本：`0.1.2`
 
 请勿把未启用 HTTPS 的管理端直接暴露到公网。
 
@@ -27,13 +27,13 @@ XinBot 实例，适合 BTTB、消息响应等常驻场景。
 从 [GitHub Releases](https://github.com/newPlayerAL/xinbot-box-manager/releases/latest)
 下载与设备架构对应的软件包：
 
-- [x86_64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.1/xinbot-box-manager_0.1.1_x86_64.deb)
-- [arm64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.1/xinbot-box-manager_0.1.1_arm64.deb)
+- [x86_64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.2/xinbot-box-manager_0.1.2_x86_64.deb)
+- [arm64](https://github.com/newPlayerAL/xinbot-box-manager/releases/download/v0.1.2/xinbot-box-manager_0.1.2_arm64.deb)
 
 下载后执行：
 
 ```shell
-sudo apt install ./xinbot-box-manager_0.1.1_x86_64.deb
+sudo apt install ./xinbot-box-manager_0.1.2_x86_64.deb
 ```
 
 arm64 设备将文件名中的 `x86_64` 改为 `arm64`。安装完成后访问：

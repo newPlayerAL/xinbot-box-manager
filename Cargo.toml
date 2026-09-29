@@ -1,6 +1,6 @@
 [package]
 name = "xinbot-box-manager"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "A lightweight web manager for XinBot instances on headless Linux devices"
 license = "GPL-3.0-or-later"
