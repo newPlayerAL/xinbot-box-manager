@@ -55,6 +55,7 @@ pub fn router(state: AppState) -> Router {
         .route("/api/auth/change-password", post(auth_change_password))
         .route("/api/settings", get(get_settings).put(update_settings))
         .route("/api/plugins", get(list_plugins))
+        .route("/api/plugins/official", get(list_official_plugins))
         .route("/api/plugins/:id/install", post(install_plugin))
         .route("/api/instances", get(list_instances).post(create_instance))
         .route(
@@ -268,6 +269,16 @@ async fn list_plugins(
     let settings = state.store.load_settings().map_err(ApiError::internal)?;
     let plugins = plugins::collect_plugins_with_status(&settings).map_err(ApiError::bad_request)?;
     Ok(Json(plugins))
+}
+
+async fn list_official_plugins(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> ApiResult<Json<plugins::OfficialPluginCatalog>> {
+    require_auth(&state, &headers)?;
+    plugins::official_plugin_catalog()
+        .map(Json)
+        .map_err(ApiError::internal)
 }
 
 async fn install_plugin(

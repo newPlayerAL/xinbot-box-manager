@@ -111,6 +111,26 @@
             <p class="library-note">可信目录中的插件可直接下载并校验；未列入可信目录的插件仍通过 Linux 文件系统导入。</p>
             <div id="plugin-library-list" class="plugin-library-list"></div>
           </section>
+
+          <section class="panel official-catalog-panel">
+            <div class="plugin-library-toolbar">
+              <div>
+                <h2>官方插件目录</h2>
+                <p id="official-catalog-meta" class="muted small-copy">正在读取官方目录…</p>
+              </div>
+              <a id="official-catalog-source" class="external-link-button" href="https://xinbot.shouldbe.top/zh/guide/plugin-list" target="_blank" rel="noopener noreferrer">打开官方页面</a>
+            </div>
+            <p class="library-note">这里用于发现社区插件。可从源码或发布页取得 JAR；只有上方可信目录中的固定版本才能由管理端直接下载和校验。</p>
+            <div class="official-catalog-toolbar">
+              <input id="official-plugin-search" type="search" placeholder="搜索名称、服务器或维护者" />
+              <select id="official-plugin-type-filter" aria-label="筛选官方插件类型">
+                <option value="all">全部类型</option>
+                <option value="META_PLUGIN">Meta 插件</option>
+                <option value="PLUGIN">普通插件</option>
+              </select>
+            </div>
+            <div id="official-plugin-list" class="official-plugin-groups"></div>
+          </section>
         </section>
 
         <section id="empty-state" class="empty-state hidden">

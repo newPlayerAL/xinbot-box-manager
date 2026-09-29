@@ -42,6 +42,22 @@ const EN_TEXT = {
   "Meta 插件": "Meta plugin",
   "普通插件": "Regular plugin",
   "可信目录中的插件可直接下载并校验；未列入可信目录的插件仍通过 Linux 文件系统导入。": "Plugins in the trusted catalog can be downloaded and verified directly. Plugins outside it must still be imported through the Linux file system.",
+  "官方插件目录": "Official plugin catalog",
+  "正在读取官方目录…": "Loading official catalog…",
+  "打开官方页面": "Open official page",
+  "这里用于发现社区插件。可从源码或发布页取得 JAR；只有上方可信目录中的固定版本才能由管理端直接下载和校验。": "Use this catalog to discover community plugins. Get JAR files from their source or release pages; only pinned versions in the trusted catalog above can be downloaded and verified by the manager.",
+  "搜索名称、服务器或维护者": "Search name, server, or maintainer",
+  "筛选官方插件类型": "Filter official plugins by type",
+  "目录快照：{date} · {count} 个插件": "Catalog snapshot: {date} · {count} plugins",
+  "官方目录暂时不可用。": "The official catalog is temporarily unavailable.",
+  "没有符合筛选条件的官方插件。": "No official plugins match the current filters.",
+  "Meta 适配插件": "Meta adapters",
+  "{count} 个": "{count}",
+  "已安装": "Installed",
+  "通用 / 页面未限定服务器": "General / no server specified on the page",
+  "维护者：{name}": "Maintainer: {name}",
+  "源码": "Source",
+  "发布页": "Releases",
   "创建第一个实例": "Create your first instance",
   "添加服务器地址、机器人账号和所需插件，然后从浏览器启动 XinBot。": "Add a server address, bot account, and required plugins, then start XinBot from your browser.",
   "连接与运行": "Connection and runtime",
@@ -362,6 +378,11 @@ const state = {
   setupMode: false,
   instances: [],
   plugins: [],
+  officialCatalog: {
+    sourceUrl: "https://xinbot.shouldbe.top/zh/guide/plugin-list",
+    updatedAt: "",
+    entries: [],
+  },
   settings: null,
   runtime: [],
   selectedId: null,
@@ -542,6 +563,16 @@ async function showApplication() {
     state.plugins = [];
     notify(error.message, true);
   }
+  try {
+    state.officialCatalog = await api("/api/plugins/official");
+  } catch (error) {
+    state.officialCatalog = {
+      sourceUrl: "https://xinbot.shouldbe.top/zh/guide/plugin-list",
+      updatedAt: "",
+      entries: [],
+    };
+    notify(error.message, true);
+  }
   renderSystemSummary();
   renderList();
   if (state.instances.length) selectInstance(state.selectedId || state.instances[0].id);
@@ -565,6 +596,8 @@ function bindEvents() {
   byId("plugin-settings-button").addEventListener("click", openSettings);
   byId("plugin-search").addEventListener("input", renderPluginManager);
   byId("plugin-type-filter").addEventListener("change", renderPluginManager);
+  byId("official-plugin-search").addEventListener("input", renderPluginManager);
+  byId("official-plugin-type-filter").addEventListener("change", renderPluginManager);
   ui.instanceForm.addEventListener("submit", saveInstance);
   byId("delete-button").addEventListener("click", deleteInstance);
   byId("collapse-config-button").addEventListener("click", () => setConfigurationCollapsed(true));
@@ -780,6 +813,7 @@ function renderPluginManager() {
   byId("plugin-resource-path").textContent = state.settings?.resourceDir
     ? t("资源目录：{path}", { path: state.settings.resourceDir })
     : t("尚未设置插件资源目录");
+  renderOfficialPluginCatalog();
 
   const plugins = state.plugins.filter((plugin) => {
     const matchesType = type === "all" || plugin.pluginType === type;
@@ -866,6 +900,138 @@ function renderPluginManager() {
     }
     card.append(badge, body, side);
     list.append(card);
+  }
+}
+
+function normalizedPluginIdentity(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function officialPluginInstalled(plugin) {
+  const officialName = normalizedPluginIdentity(plugin.name);
+  const officialId = normalizedPluginIdentity(plugin.id);
+  return state.plugins.some((local) => {
+    if (!local.available) return false;
+    const localName = normalizedPluginIdentity(local.name);
+    const localId = normalizedPluginIdentity(local.id);
+    return localName === officialName
+      || localId === officialId
+      || (officialId === "xinmetaplugin" && localId === "xinmeta");
+  });
+}
+
+function localizedOfficialDescription(plugin) {
+  return currentLanguage === "en" ? (plugin.descriptionEn || plugin.description) : plugin.description;
+}
+
+function officialPluginLink(url, label) {
+  const link = document.createElement("a");
+  link.className = "external-link-button compact";
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = t(label);
+  return link;
+}
+
+function renderOfficialPluginCatalog() {
+  const catalog = state.officialCatalog;
+  const entries = catalog?.entries || [];
+  const source = byId("official-catalog-source");
+  source.href = catalog?.sourceUrl || "https://xinbot.shouldbe.top/zh/guide/plugin-list";
+  byId("official-catalog-meta").textContent = entries.length
+    ? t("目录快照：{date} · {count} 个插件", { date: catalog.updatedAt, count: entries.length })
+    : t("官方目录暂时不可用。");
+
+  const search = byId("official-plugin-search").value.trim().toLocaleLowerCase(currentLanguage);
+  const type = byId("official-plugin-type-filter").value;
+  const filtered = entries.filter((plugin) => {
+    if (type !== "all" && plugin.pluginType !== type) return false;
+    const haystack = [
+      plugin.name,
+      plugin.maintainer,
+      plugin.description,
+      plugin.descriptionEn,
+      ...(plugin.supportedServers || []),
+    ].join(" ").toLocaleLowerCase(currentLanguage);
+    return !search || haystack.includes(search);
+  });
+
+  const list = byId("official-plugin-list");
+  list.textContent = "";
+  if (!filtered.length) {
+    const empty = document.createElement("p");
+    empty.className = "plugin-library-empty";
+    empty.textContent = entries.length
+      ? t("没有符合筛选条件的官方插件。")
+      : t("官方目录暂时不可用。");
+    list.append(empty);
+    return;
+  }
+
+  const groups = [
+    ["META_PLUGIN", "Meta 适配插件"],
+    ["PLUGIN", "普通插件"],
+  ];
+  for (const [pluginType, label] of groups) {
+    const groupEntries = filtered.filter((plugin) => plugin.pluginType === pluginType);
+    if (!groupEntries.length) continue;
+
+    const group = document.createElement("section");
+    group.className = "official-plugin-group";
+    const groupHeading = document.createElement("div");
+    groupHeading.className = "official-group-heading";
+    const title = document.createElement("h3");
+    title.textContent = t(label);
+    const count = document.createElement("span");
+    count.textContent = t("{count} 个", { count: groupEntries.length });
+    groupHeading.append(title, count);
+    const cards = document.createElement("div");
+    cards.className = "official-plugin-list";
+
+    for (const plugin of groupEntries) {
+      const card = document.createElement("article");
+      card.className = "official-plugin-card";
+      const copy = document.createElement("div");
+      copy.className = "official-plugin-copy";
+      const heading = document.createElement("div");
+      heading.className = "official-plugin-heading";
+      const name = document.createElement("h3");
+      name.textContent = plugin.name;
+      const badge = document.createElement("span");
+      badge.className = `plugin-type-badge ${plugin.pluginType === "META_PLUGIN" ? "meta" : "regular"}`;
+      badge.textContent = plugin.pluginType === "META_PLUGIN" ? "META" : "PLUGIN";
+      heading.append(name, badge);
+      if (officialPluginInstalled(plugin)) {
+        const installed = document.createElement("span");
+        installed.className = "official-installed-badge";
+        installed.textContent = t("已安装");
+        heading.append(installed);
+      }
+      const description = document.createElement("p");
+      description.textContent = localizedOfficialDescription(plugin);
+      const facts = document.createElement("div");
+      facts.className = "official-plugin-facts";
+      const servers = document.createElement("span");
+      servers.textContent = (plugin.supportedServers || []).length
+        ? localizedList(plugin.supportedServers)
+        : t("通用 / 页面未限定服务器");
+      const maintainer = document.createElement("span");
+      maintainer.textContent = t("维护者：{name}", { name: plugin.maintainer });
+      facts.append(servers, maintainer);
+      copy.append(heading, description, facts);
+
+      const actions = document.createElement("div");
+      actions.className = "official-plugin-actions";
+      actions.append(
+        officialPluginLink(plugin.repositoryUrl, "源码"),
+        officialPluginLink(`${plugin.repositoryUrl.replace(/\/+$/, "")}/releases`, "发布页"),
+      );
+      card.append(copy, actions);
+      cards.append(card);
+    }
+    group.append(groupHeading, cards);
+    list.append(group);
   }
 }
 

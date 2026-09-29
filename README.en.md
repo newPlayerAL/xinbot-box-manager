@@ -17,9 +17,9 @@ Do not expose the management interface directly to the public internet without H
 - **Multiple instances**: Create, edit, recoverably delete, and run isolated XinBot instances.
 - **Runtime controls**: Start, stop, and restart instances, configure per-instance automatic
   startup, send console commands, and view logs, PIDs, CPU usage, and memory usage in real time.
-- **Configuration and plugins**: Manage Core, Meta, and regular plugins, download and verify
-  plugins from the trusted catalog, handle dependencies automatically, and select dedicated Meta
-  plugins for known servers.
+- **Configuration and plugins**: Manage Core, Meta, and regular plugins, browse the official
+  community plugin catalog, download and verify plugins from the trusted catalog, handle
+  dependencies automatically, and select dedicated Meta plugins for known servers.
 - **Per-instance proxies**: Configure an HTTP, SOCKS4, or SOCKS5 server-connection proxy for each
   instance.
 - **BTTB configuration**: Edit players, pearl buttons, return points, and in-game administrators

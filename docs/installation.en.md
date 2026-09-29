@@ -150,6 +150,11 @@ environment variables such as `HTTPS_PROXY` are used. Per-instance Minecraft pro
 to plugin downloads. Proxy credentials are stored unencrypted in the permission-restricted local
 settings file.
 
+The same page includes a bundled snapshot of the official community plugin catalog. It can be
+filtered by name, server, maintainer, and type, with links to each plugin's source and release
+pages. Regular catalog entries are for discovery only; the manager can download a plugin directly
+only after a pinned version and SHA-256 have been added to the trusted catalog.
+
 ## Network security
 
 The management interface listens on local-network HTTP by default. When accessing it from an

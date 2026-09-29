@@ -197,6 +197,25 @@ button:disabled { opacity: .38; cursor: not-allowed; }
 .plugin-install-button { min-height: 31px; margin-top: .65rem; padding: .4rem .75rem; color: var(--primary-ink); background: var(--accent); font-size: .72rem; }
 .plugin-install-button:hover:not(:disabled) { background: var(--accent-hover); }
 .plugin-library-empty { margin: 1rem; color: var(--muted); text-align: center; }
+.official-catalog-panel { margin-top: 1rem; padding: 1.15rem; }
+.external-link-button { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: .58rem .92rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px; font-size: .82rem; font-weight: 760; text-decoration: none; transition: transform .12s, background .12s, border-color .12s; }
+.external-link-button:hover { background: var(--surface-3); border-color: var(--accent-strong); transform: translateY(-1px); }
+.external-link-button.compact { min-height: 31px; padding: .4rem .65rem; font-size: .7rem; }
+.official-catalog-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) 150px; gap: .55rem; max-width: 520px; margin: 0 0 1rem auto; }
+.official-catalog-toolbar input, .official-catalog-toolbar select { margin-top: 0; }
+.official-plugin-groups, .official-plugin-group { display: grid; gap: .75rem; }
+.official-plugin-group + .official-plugin-group { margin-top: .55rem; }
+.official-group-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 .15rem; }
+.official-group-heading span { color: var(--muted); font-size: .7rem; }
+.official-plugin-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.official-plugin-card { display: flex; flex-direction: column; min-width: 0; padding: .9rem; background: var(--input); border: 1px solid var(--line); border-radius: 11px; }
+.official-plugin-heading { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+.official-plugin-heading h3 { min-width: 0; overflow-wrap: anywhere; }
+.official-installed-badge { padding: .22rem .38rem; color: var(--accent); background: var(--accent-soft); border-radius: 5px; font-size: .62rem; font-weight: 800; }
+.official-plugin-copy > p { margin: .45rem 0 .65rem; color: var(--muted); font-size: .74rem; line-height: 1.5; }
+.official-plugin-facts { display: flex; flex-wrap: wrap; gap: .35rem; }
+.official-plugin-facts span { padding: .22rem .38rem; color: var(--label); background: var(--surface-2); border-radius: 5px; font-size: .64rem; overflow-wrap: anywhere; }
+.official-plugin-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: auto; padding-top: .75rem; }
 .empty-state { height: calc(100vh - 120px); display: grid; place-items: center; align-content: center; text-align: center; }
 .empty-state p { max-width: 460px; color: var(--muted); }
 .empty-icon { display: grid; place-items: center; width: 62px; height: 62px; margin-bottom: 1rem; color: var(--accent); background: var(--accent-soft); border: 1px solid rgba(88, 213, 176, .25); border-radius: 18px; font-size: 2rem; }
@@ -344,6 +363,7 @@ dialog::backdrop { background: var(--dialog-backdrop); backdrop-filter: blur(4px
   .plugin-filters { grid-template-columns: 1fr; min-width: 100%; }
   .plugin-library-card { grid-template-columns: auto 1fr; }
   .plugin-library-status { grid-column: 2; text-align: left; }
+  .official-catalog-toolbar, .official-plugin-list { grid-template-columns: 1fr; max-width: none; }
   .bttb-location-header { display: none; }
   .bttb-location-row { grid-template-columns: repeat(2, 1fr) 32px; }
   .bttb-location-row input:nth-child(4) { grid-column: 1 / 2; }

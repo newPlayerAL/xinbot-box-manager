@@ -15,6 +15,8 @@ const PLUGIN: &str = "PLUGIN";
 const META_PLUGIN: &str = "META_PLUGIN";
 const MAX_PLUGIN_BYTES: u64 = 128 * 1024 * 1024;
 const PLUGIN_DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(30 * 60);
+const OFFICIAL_PLUGIN_CATALOG: &str = include_str!("../resources/official_plugins.json");
+const OFFICIAL_PLUGIN_SOURCE: &str = "https://xinbot.shouldbe.top/zh/guide/plugin-list";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -86,12 +88,112 @@ pub struct PluginInstallResult {
     pub installed: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OfficialPluginEntry {
+    pub id: String,
+    pub name: String,
+    pub plugin_type: String,
+    #[serde(default)]
+    pub supported_servers: Vec<String>,
+    #[serde(default)]
+    pub maintainer: String,
+    pub repository_url: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub description_en: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OfficialPluginCatalog {
+    pub source_url: String,
+    pub updated_at: String,
+    pub entries: Vec<OfficialPluginEntry>,
+}
+
 fn default_version() -> String {
     "未知版本".to_string()
 }
 
 fn default_config_format() -> String {
     "text".to_string()
+}
+
+pub fn official_plugin_catalog() -> Result<OfficialPluginCatalog, String> {
+    let mut catalog: OfficialPluginCatalog = serde_json::from_str(OFFICIAL_PLUGIN_CATALOG)
+        .map_err(|error| format!("官方插件目录格式无效：{error}"))?;
+    if catalog.source_url != OFFICIAL_PLUGIN_SOURCE {
+        return Err("官方插件目录来源地址无效".to_string());
+    }
+    if catalog.updated_at.len() != 10
+        || !catalog
+            .updated_at
+            .chars()
+            .enumerate()
+            .all(|(index, character)| {
+                matches!(index, 4 | 7) && character == '-'
+                    || !matches!(index, 4 | 7) && character.is_ascii_digit()
+            })
+    {
+        return Err("官方插件目录快照日期无效".to_string());
+    }
+    if catalog.entries.is_empty() || catalog.entries.len() > 256 {
+        return Err("官方插件目录条目数量无效".to_string());
+    }
+
+    let mut ids = HashSet::new();
+    for entry in &mut catalog.entries {
+        entry.id = entry.id.trim().to_string();
+        entry.name = entry.name.trim().to_string();
+        entry.plugin_type = entry.plugin_type.trim().to_ascii_uppercase();
+        entry.maintainer = entry.maintainer.trim().to_string();
+        entry.repository_url = entry.repository_url.trim().to_string();
+        if entry.id.is_empty()
+            || !entry.id.chars().all(|character| {
+                character.is_ascii_alphanumeric() || matches!(character, '-' | '_')
+            })
+            || !ids.insert(entry.id.clone())
+        {
+            return Err(format!("官方插件 {} 的 ID 无效或重复", entry.name));
+        }
+        if entry.name.is_empty() || entry.name.chars().count() > 120 {
+            return Err(format!("官方插件 {} 的名称无效", entry.id));
+        }
+        if entry.plugin_type != PLUGIN && entry.plugin_type != META_PLUGIN {
+            return Err(format!("官方插件 {} 的类型无效", entry.name));
+        }
+        if entry.maintainer.is_empty() || entry.maintainer.chars().count() > 120 {
+            return Err(format!("官方插件 {} 的维护者无效", entry.name));
+        }
+        if !is_allowed_repository_url(&entry.repository_url) {
+            return Err(format!("官方插件 {} 的源码地址无效", entry.name));
+        }
+    }
+    catalog.entries.sort_by(|left, right| {
+        let left_rank = usize::from(left.plugin_type != META_PLUGIN);
+        let right_rank = usize::from(right.plugin_type != META_PLUGIN);
+        left_rank
+            .cmp(&right_rank)
+            .then_with(|| left.name.to_lowercase().cmp(&right.name.to_lowercase()))
+    });
+    Ok(catalog)
+}
+
+fn is_allowed_repository_url(url: &str) -> bool {
+    let Some(path) = url.strip_prefix("https://github.com/") else {
+        return false;
+    };
+    let parts: Vec<_> = path.split('/').collect();
+    parts.len() == 2
+        && parts.iter().all(|part| {
+            !part.is_empty()
+                && part.len() <= 100
+                && part.chars().all(|character| {
+                    character.is_ascii_alphanumeric() || matches!(character, '-' | '_' | '.')
+                })
+        })
 }
 
 pub fn collect_plugins(settings: &GlobalSettings) -> Result<Vec<PluginDescriptor>, String> {
@@ -733,6 +835,44 @@ mod tests {
             .iter()
             .all(|plugin| plugin.download_url.starts_with("https://")));
         assert!(downloadable.iter().all(|plugin| plugin.sha256.len() == 64));
+    }
+
+    #[test]
+    fn official_catalog_is_valid_and_sorted() {
+        let catalog = official_plugin_catalog().unwrap();
+        assert_eq!(catalog.source_url, OFFICIAL_PLUGIN_SOURCE);
+        assert_eq!(catalog.entries.len(), 19);
+        assert!(catalog
+            .entries
+            .iter()
+            .all(|entry| is_allowed_repository_url(&entry.repository_url)));
+        let first_regular = catalog
+            .entries
+            .iter()
+            .position(|entry| entry.plugin_type == PLUGIN)
+            .unwrap();
+        assert!(catalog.entries[..first_regular]
+            .iter()
+            .all(|entry| entry.plugin_type == META_PLUGIN));
+        assert!(catalog.entries[first_regular..]
+            .iter()
+            .all(|entry| entry.plugin_type == PLUGIN));
+    }
+
+    #[test]
+    fn official_catalog_rejects_lookalike_repository_hosts() {
+        assert!(is_allowed_repository_url(
+            "https://github.com/huangdihd/xinbot"
+        ));
+        assert!(!is_allowed_repository_url(
+            "https://github.com.evil.example/huangdihd/xinbot"
+        ));
+        assert!(!is_allowed_repository_url(
+            "https://github.com@evil.example/huangdihd/xinbot"
+        ));
+        assert!(!is_allowed_repository_url(
+            "https://github.com/huangdihd/xinbot/releases"
+        ));
     }
 
     #[test]

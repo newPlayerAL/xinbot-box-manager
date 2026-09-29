@@ -1,0 +1,196 @@
+{
+  "sourceUrl": "https://xinbot.shouldbe.top/zh/guide/plugin-list",
+  "updatedAt": "2026-09-28",
+  "entries": [
+    {
+      "id": "xin-meta-plugin",
+      "name": "xinMetaPlugin",
+      "pluginType": "META_PLUGIN",
+      "supportedServers": ["2b2t.xin"],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/xinMetaPlugin",
+      "description": "官方提供的 2b2t.xin 服务器适配与登录插件。",
+      "descriptionEn": "Official server adapter and login plugin for 2b2t.xin."
+    },
+    {
+      "id": "3c3u-meta-plugin",
+      "name": "3c3uMetaPlugin",
+      "pluginType": "META_PLUGIN",
+      "supportedServers": ["3c3u.org"],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/3c3uMetaPlugin",
+      "description": "3c3u.org 服务器适配插件。",
+      "descriptionEn": "Server adapter for 3c3u.org."
+    },
+    {
+      "id": "movement-sync",
+      "name": "MovementSync",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/movementsync",
+      "description": "记录地形并提供移动管理能力。",
+      "descriptionEn": "Records terrain and provides movement management capabilities."
+    },
+    {
+      "id": "xin-remote",
+      "name": "xinRemote",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/xinRemote",
+      "description": "提供 XinBot 远程控制能力。",
+      "descriptionEn": "Provides remote control capabilities for XinBot."
+    },
+    {
+      "id": "back-to-the-base",
+      "name": "BackToTheBase",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/BackToTheBase",
+      "description": "触发末影珍珠机关以返回基地。",
+      "descriptionEn": "Triggers ender pearl mechanisms to return to base."
+    },
+    {
+      "id": "envy",
+      "name": "Envy",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/envy",
+      "description": "根据聊天内容自动发送羡慕回复。",
+      "descriptionEn": "Automatically responds to matching chat content."
+    },
+    {
+      "id": "xin-claw",
+      "name": "XinClaw",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/xinclaw",
+      "description": "基于 LangChain4j 的 XinBot AI 插件。",
+      "descriptionEn": "An AI plugin for XinBot based on LangChain4j."
+    },
+    {
+      "id": "xin-pga",
+      "name": "XinPga",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "2698269088",
+      "repositoryUrl": "https://github.com/2698269088/XinPga",
+      "description": "支持多模式、多语言和远程控制的消息发送插件。",
+      "descriptionEn": "A messaging plugin with multiple modes, languages, and remote control."
+    },
+    {
+      "id": "xin-chat-command",
+      "name": "XinChatCommandPlugin",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/XinChatCommandPlugin",
+      "description": "可扩展的聊天命令框架。",
+      "descriptionEn": "An extensible chat command framework for XinBot."
+    },
+    {
+      "id": "survival-manager",
+      "name": "SurvivalManager",
+      "pluginType": "PLUGIN",
+      "supportedServers": ["2b2t.xin", "NCP"],
+      "maintainer": "giteer12",
+      "repositoryUrl": "https://github.com/giteer12/survivalmanager",
+      "description": "提供防挂机、背包管理、反击和好友系统等生存管理能力。",
+      "descriptionEn": "Provides anti-AFK, inventory, retaliation, friend, and survival management features."
+    },
+    {
+      "id": "xin-bls",
+      "name": "XinBls",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "2698269088",
+      "repositoryUrl": "https://github.com/2698269088/XinBls",
+      "description": "存储 XinBot 的终端输出信息。",
+      "descriptionEn": "Stores XinBot terminal output."
+    },
+    {
+      "id": "chat-filter",
+      "name": "ChatFilter",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "newPlayerAL",
+      "repositoryUrl": "https://github.com/newPlayerAL/ChatFilter",
+      "description": "过滤敏感词并隐藏重复或相似的聊天消息。",
+      "descriptionEn": "Filters profanity and hides repeated or similar chat messages."
+    },
+    {
+      "id": "4d4v-meta-plugin",
+      "name": "4d4vMetaPlugin",
+      "pluginType": "META_PLUGIN",
+      "supportedServers": ["4d4v.top"],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/4d4vMetaPlugin",
+      "description": "4d4v.top 服务器适配插件。",
+      "descriptionEn": "Server adapter for 4d4v.top."
+    },
+    {
+      "id": "lan-connect",
+      "name": "LanConnect",
+      "pluginType": "META_PLUGIN",
+      "supportedServers": ["all"],
+      "maintainer": "2698269088",
+      "repositoryUrl": "https://github.com/2698269088/Xin-LanConnect",
+      "description": "通过可配置的规则链适配不同服务器。",
+      "descriptionEn": "Adapts to different servers through configurable rule chains."
+    },
+    {
+      "id": "movement-mcp",
+      "name": "MovementMCP",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/MovementMCP",
+      "description": "通过 MCP 协议提供移动、感知和操作工具。",
+      "descriptionEn": "Exposes movement, perception, and action tools through MCP."
+    },
+    {
+      "id": "xin-via",
+      "name": "XinVia",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/XinVia",
+      "description": "为 Meta 插件提供 ViaVersion 和 ViaBackwards 跨版本支持。",
+      "descriptionEn": "Provides ViaVersion and ViaBackwards support for Meta plugins."
+    },
+    {
+      "id": "cn-org-meta-plugin",
+      "name": "CnOrgMetaPlugin",
+      "pluginType": "META_PLUGIN",
+      "supportedServers": ["2b2t-cn.org"],
+      "maintainer": "huangdihd",
+      "repositoryUrl": "https://github.com/huangdihd/CnOrgMetaPlugin",
+      "description": "2b2t-cn.org 的登录、跨版本、保活和大厅适配插件。",
+      "descriptionEn": "Login, cross-version, keep-alive, and lobby adapter for 2b2t-cn.org."
+    },
+    {
+      "id": "xin-player-monitor",
+      "name": "XinPlayerMonitor",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "WaltomAdaam2",
+      "repositoryUrl": "https://github.com/WaltomAdaam2/XinPlayerMonitor",
+      "description": "将玩家上线、下线、聊天和状态数据持续记录到 SQLite。",
+      "descriptionEn": "Continuously records player activity, chat, and status data to SQLite."
+    },
+    {
+      "id": "xinbot-info-manage",
+      "name": "Xinbot_InfoManage",
+      "pluginType": "PLUGIN",
+      "supportedServers": [],
+      "maintainer": "YunXiaobo",
+      "repositoryUrl": "https://github.com/YunXiaobo/Xinbot_InfoManage",
+      "description": "查询服务器状态和玩家信息，并支持多服务器监控。",
+      "descriptionEn": "Queries server and player information with multi-server monitoring support."
+    }
+  ]
+}
